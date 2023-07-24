@@ -1,0 +1,151 @@
+{
+    "asset" : {
+        "generator" : "Khronos glTF Blender I/O v3.2.43",
+        "version" : "2.0"
+    },
+    "scene" : 0,
+    "scenes" : [
+        {
+            "name" : "Scene",
+            "nodes" : [
+                0
+            ]
+        }
+    ],
+    "nodes" : [
+        {
+            "mesh" : 0,
+            "name" : "CliffRock_low_CliffRock_MAT_0"
+        }
+    ],
+    "materials" : [
+        {
+            "doubleSided" : true,
+            "name" : "CliffRock_MAT.003",
+            "pbrMetallicRoughness" : {
+                "baseColorFactor" : [
+                    0.800000011920929,
+                    0.800000011920929,
+                    0.800000011920929,
+                    1
+                ]
+            }
+        }
+    ],
+    "meshes" : [
+        {
+            "name" : "CliffRock_low_CliffRock_MAT_0.003",
+            "primitives" : [
+                {
+                    "attributes" : {
+                        "POSITION" : 0,
+                        "NORMAL" : 1,
+                        "TANGENT" : 2,
+                        "TEXCOORD_0" : 3,
+                        "TEXCOORD_1" : 4,
+                        "TEXCOORD_2" : 5
+                    },
+                    "indices" : 6,
+                    "material" : 0
+                }
+            ]
+        }
+    ],
+    "accessors" : [
+        {
+            "bufferView" : 0,
+            "componentType" : 5126,
+            "count" : 2138,
+            "max" : [
+                3.178910970687866,
+                8.434151649475098,
+                4.216048240661621
+            ],
+            "min" : [
+                -1.0650383234024048,
+                0.14501093327999115,
+                -4.272609710693359
+            ],
+            "type" : "VEC3"
+        },
+        {
+            "bufferView" : 1,
+            "componentType" : 5126,
+            "count" : 2138,
+            "type" : "VEC3"
+        },
+        {
+            "bufferView" : 2,
+            "componentType" : 5126,
+            "count" : 2138,
+            "type" : "VEC4"
+        },
+        {
+            "bufferView" : 3,
+            "componentType" : 5126,
+            "count" : 2138,
+            "type" : "VEC2"
+        },
+        {
+            "bufferView" : 4,
+            "componentType" : 5126,
+            "count" : 2138,
+            "type" : "VEC2"
+        },
+        {
+            "bufferView" : 5,
+            "componentType" : 5126,
+            "count" : 2138,
+            "type" : "VEC2"
+        },
+        {
+            "bufferView" : 6,
+            "componentType" : 5123,
+            "count" : 9462,
+            "type" : "SCALAR"
+        }
+    ],
+    "bufferViews" : [
+        {
+            "buffer" : 0,
+            "byteLength" : 25656,
+            "byteOffset" : 0
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 25656,
+            "byteOffset" : 25656
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 34208,
+            "byteOffset" : 51312
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 17104,
+            "byteOffset" : 85520
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 17104,
+            "byteOffset" : 102624
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 17104,
+            "byteOffset" : 119728
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 18924,
+            "byteOffset" : 136832
+        }
+    ],
+    "buffers" : [
+        {
+            "byteLength" : 155756,
+            "uri" : "rock5.bin"
+        }
+    ]
+}
