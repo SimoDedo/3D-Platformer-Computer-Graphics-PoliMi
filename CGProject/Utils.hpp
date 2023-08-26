@@ -121,6 +121,12 @@ struct BoundingSphere {
 	glm::mat4* mMat;
 };
 
+struct Transform {
+	glm::vec3 pos;
+	glm::vec3 rot;
+	glm::vec3 scale;
+};
+
 float RandFloat(float a, float b)
 {
 	float random = ((float)rand()) / (float)RAND_MAX;

@@ -381,10 +381,10 @@ class CGProject : public BaseProject {
 		//Initialize character controller and enemies
 		controller.init(bbShroom);
 		for (int i = 0; i < SPIKE_INSTANCES; i++) {
-			spikeEnemy[i].init(bbSpike[i], spikePosition[i], spikeRot[i], spikeScale[i], spikeDir[i], spikeDistance[i], spikeSpeed[i]);
+			spikeEnemy[i].init(bbSpike[i], spikeTransform[i].pos, spikeTransform[i].rot.y, spikeTransform[i].scale, spikeDir[i], spikeDistance[i], spikeSpeed[i]);
 		}
 		for (int i = 0; i < SCROLL_INSTANCES; i++) {
-			scroll[i].init(bbScroll[i], scrollPosition[i], scrollRot[i], scrollScale[i]);
+			scroll[i].init(bbScroll[i], scrollTransform[i].pos, scrollTransform[i].rot, scrollTransform[i].scale);
 		}
 
 		// Descriptor Layouts [what will be passed to the shaders]
@@ -1184,9 +1184,9 @@ class CGProject : public BaseProject {
 		gubo.AmbLightColor = glm::vec3(0.35f);
 		gubo.eyePos = controller.getCamPos();
 
-		gubo.plantPointPos0 = gplantPosition[0] + glm::vec3(-0.2, 1, 0);
-		gubo.plantPointPos1 = gplantPosition[1] + glm::vec3(-0.2, 1, 0);
-		gubo.plantPointPos2 = gplantPosition[2] + glm::vec3(-0.2, 1, 0);
+		gubo.plantPointPos0 = gplantTransform[0].pos + glm::vec3(-0.2, 1, 0);
+		gubo.plantPointPos1 = gplantTransform[1].pos + glm::vec3(-0.2, 1, 0);
+		gubo.plantPointPos2 = gplantTransform[2].pos + glm::vec3(-0.2, 1, 0);
 		gubo.plantPointColor = (glm::vec3(119, 160, 201) / 255.f) * (float)toShow;
 		gubo.plantPointDist = 1.f;
 		gubo.plantPointDecay = 0.6f;
@@ -1194,9 +1194,9 @@ class CGProject : public BaseProject {
 
 		for (int i = 0; i < GRASS_INSTANCES; i++)
 		{
-			World = glm::translate(glm::mat4(1), grassPosition[i]) *
-					glm::rotate(glm::mat4(1), glm::radians(grassRot[i]), glm::vec3(0, 1, 0)) *
-					glm::scale(glm::mat4(1), grassScale[i] * (float)toShow);
+			World = glm::translate(glm::mat4(1), grassTransform[i].pos) *
+					glm::rotate(glm::mat4(1), glm::radians(grassTransform[i].rot.y), glm::vec3(0, 1, 0)) *
+					glm::scale(glm::mat4(1), grassTransform[i].scale * (float)toShow);
 			uboGrass[i].amb = 0.2f; uboGrass[i].roughOff = 0.3f; uboGrass[i].aoOff = 0.0f; uboGrass[i].sColor = glm::vec3(1.0f); 
 			uboGrass[i].time = (elapsed_seconds + grassSwayRand[i])*2; uboGrass[i].ratio_xz = 0.5f; uboGrass[i].scale = 50; uboGrass[i].offset = 0;
 			uboGrass[i].mvpMat = Prj * View * World;
@@ -1206,9 +1206,9 @@ class CGProject : public BaseProject {
 		}
 		for (int i = 0; i < BIRCH_INSTANCES; i++)
 		{
-			World = glm::translate(glm::mat4(1), birchPosition[i]) *
-					glm::rotate(glm::mat4(1), glm::radians(birchRot[i]), glm::vec3(0, 1, 0)) *
-					glm::scale(glm::mat4(1), birchScale[i] * ((i == 0 || i == 1 || i == 2) ? 1 - (float)toShow : (float)toShow));
+			World = glm::translate(glm::mat4(1), birchTransform[i].pos) *
+					glm::rotate(glm::mat4(1), glm::radians(birchTransform[i].rot.y), glm::vec3(0, 1, 0)) *
+					glm::scale(glm::mat4(1), birchTransform[i].scale * ((i == 0 || i == 1 || i == 2) ? 1 - (float)toShow : (float)toShow));
 			uboBirch[i].amb = 0.2f; uboBirch[i].roughOff = 0.0f; uboBirch[i].aoOff = 0.0f; uboBirch[i].sColor = glm::vec3(1.0f); 
 			uboBirch[i].time = elapsed_seconds + birchSwayRand[i]; uboBirch[i].ratio_xz = 0.7f; uboBirch[i].scale = 6; uboBirch[i].offset = 0.2f;
 			uboBirch[i].mvpMat = Prj * View * World;
@@ -1218,9 +1218,9 @@ class CGProject : public BaseProject {
 		}
 		for (int i = 0; i < TREE_INSTANCES; i++)
 		{
-			World = glm::translate(glm::mat4(1), treePosition[i]) *
-					glm::rotate(glm::mat4(1), glm::radians(treeRot[i]), glm::vec3(0, 1, 0)) *
-					glm::scale(glm::mat4(1), treeScale[i] * (float)toShow);
+			World = glm::translate(glm::mat4(1), treeTransform[i].pos) *
+					glm::rotate(glm::mat4(1), glm::radians(treeTransform[i].rot.y), glm::vec3(0, 1, 0)) *
+					glm::scale(glm::mat4(1), treeTransform[i].scale * (float)toShow);
 			uboTree[i].amb = 0.2f; uboTree[i].roughOff = 0.0f; uboTree[i].aoOff = 0.0f; uboTree[i].sColor = glm::vec3(1.0f);
 			uboTree[i].time = elapsed_seconds + treeSwayRand[i]; uboTree[i].ratio_xz = 0.5f; uboTree[i].scale = 8; uboTree[i].offset = 0.5;
 			uboTree[i].mvpMat = Prj * View * World;
@@ -1230,9 +1230,9 @@ class CGProject : public BaseProject {
 		}
 		for (int i = 0; i < PINE_INSTANCES; i++)
 		{
-			World = glm::translate(glm::mat4(1), pinePosition[i]) *
-					glm::rotate(glm::mat4(1), glm::radians(pineRot[i]), glm::vec3(0, 1, 0)) *
-					glm::scale(glm::mat4(1), pineScale[i] * (float)toShow);
+			World = glm::translate(glm::mat4(1), pineTransform[i].pos) *
+					glm::rotate(glm::mat4(1), glm::radians(pineTransform[i].rot.y), glm::vec3(0, 1, 0)) *
+					glm::scale(glm::mat4(1), pineTransform[i].scale * (float)toShow);
 			uboPine[i].amb = 0.2f; uboPine[i].roughOff = 0.0f; uboPine[i].aoOff = 0.0f; uboPine[i].sColor = glm::vec3(1.0f);
 			uboPine[i].time = elapsed_seconds + pineSwayRand[i]; uboPine[i].ratio_xz = 0.7f; uboPine[i].scale = 9; uboPine[i].offset = 0.2f;
 			uboPine[i].mvpMat = Prj * View * World;
@@ -1242,9 +1242,9 @@ class CGProject : public BaseProject {
 		}
 		for (int i = 0; i < ROCK_INSTANCES; i++)
 		{
-			World = glm::translate(glm::mat4(1), rockPosition[i]) *
-					glm::rotate(glm::mat4(1), glm::radians(rockRot[i]), glm::vec3(0, 1, 0))*
-					glm::scale(glm::mat4(1), rockScale[i] * ( i == 0? 1-(float)toShow : (float)toShow));
+			World = glm::translate(glm::mat4(1), rockTransform[i].pos) *
+					glm::rotate(glm::mat4(1), glm::radians(rockTransform[i].rot.y), glm::vec3(0, 1, 0))*
+					glm::scale(glm::mat4(1), rockTransform[i].scale * ( i == 0? 1-(float)toShow : (float)toShow));
 			uboRock[i].amb = 0.2f; uboRock[i].roughOff = 0.5f; uboRock[i].aoOff = 0.7f; uboRock[i].sColor = glm::vec3(1.0f);
 			uboRock[i].mvpMat = Prj * View * World;
 			uboRock[i].mMat = World;
@@ -1253,9 +1253,9 @@ class CGProject : public BaseProject {
 		}
 		for (int i = 0; i < WALL_INSTANCES; i++)
 		{
-			World = glm::translate(glm::mat4(1), wallPosition[i]) *
-					glm::rotate(glm::mat4(1), glm::radians(wallRot[i]), glm::vec3(0, 1, 0))*
-					glm::scale(glm::mat4(1), wallScale[i] * (float)toShow);
+			World = glm::translate(glm::mat4(1), wallTransform[i].pos) *
+					glm::rotate(glm::mat4(1), glm::radians(wallTransform[i].rot.y), glm::vec3(0, 1, 0))*
+					glm::scale(glm::mat4(1), wallTransform[i].scale * (float)toShow);
 			uboWall[i].amb = 0.2f; uboWall[i].roughOff = 0.1f; uboWall[i].aoOff = 0.5f; uboWall[i].sColor = glm::vec3(1.0f);
 			uboWall[i].mvpMat = Prj * View * World;
 			uboWall[i].mMat = World;
@@ -1275,9 +1275,9 @@ class CGProject : public BaseProject {
 		}
 		for (int i = 0; i < GPLANT_INSTANCES; i++)
 		{
-			World = glm::translate(glm::mat4(1), gplantPosition[i]) *
-					glm::rotate(glm::mat4(1), glm::radians(gplantRot[i]), glm::vec3(0, 1, 0)) *
-					glm::scale(glm::mat4(1), gplantScale[i] * (float)toShow);
+			World = glm::translate(glm::mat4(1), gplantTransform[i].pos) *
+					glm::rotate(glm::mat4(1), glm::radians(gplantTransform[i].rot.y), glm::vec3(0, 1, 0)) *
+					glm::scale(glm::mat4(1), gplantTransform[i].scale * (float)toShow);
 			uboGplant[i].amb = 0.2f; uboGplant[i].roughOff = 0.3f; uboGplant[i].aoOff = 0.5f; uboGplant[i].sColor = glm::vec3(1.0f);
 			uboGplant[i].time = elapsed_seconds + gplantSwayRand[i]; uboGplant[i].ratio_xz = 0.5f; uboGplant[i].scale = 10; uboGplant[i].offset = 0;
 			uboGplant[i].mvpMat = Prj * View * World;
@@ -1287,9 +1287,9 @@ class CGProject : public BaseProject {
 		}
 		for (int i = 0; i < FLOAT_INSTANCES; i++)
 		{
-			World = glm::translate(glm::mat4(1), floatPosition[i]) *
-				glm::rotate(glm::mat4(1), glm::radians(floatRot[i]), glm::vec3(0, 1, 0)) *
-				glm::scale(glm::mat4(1), floatScale[i] * (float)toShow);
+			World = glm::translate(glm::mat4(1), floatTransform[i].pos) *
+				glm::rotate(glm::mat4(1), glm::radians(floatTransform[i].rot.y), glm::vec3(0, 1, 0)) *
+				glm::scale(glm::mat4(1), floatTransform[i].scale * (float)toShow);
 			uboFloat[i].amb = 0.2f; uboFloat[i].roughOff = 0.3f; uboFloat[i].aoOff = 0.5f; uboFloat[i].sColor = glm::vec3(1.0f);
 			uboFloat[i].mvpMat = Prj * View * World;
 			uboFloat[i].mMat = World;
@@ -1309,9 +1309,9 @@ class CGProject : public BaseProject {
 		}
 		for (int i = 0; i < TERRAIN_INSTANCES; i++)
 		{
-			World = glm::translate(glm::mat4(1), terrainPosition[i]) *
-					glm::rotate(glm::mat4(1), glm::radians(terrainRot[i]), glm::vec3(0, 1, 0)) *
-					glm::scale(glm::mat4(1), terrainScale[i] * (float)toShow);
+			World = glm::translate(glm::mat4(1), terrainTransform[i].pos) *
+					glm::rotate(glm::mat4(1), glm::radians(terrainTransform[i].rot.y), glm::vec3(0, 1, 0)) *
+					glm::scale(glm::mat4(1), terrainTransform[i].scale * (float)toShow);
 			uboTerrain[i].amb = 0.2f; uboTerrain[i].roughOff = 0.0f; uboTerrain[i].aoOff = 0.0f; uboTerrain[i].sColor = glm::vec3(1.0f);
 			uboTerrain[i].mvpMat = Prj * View * World;
 			uboTerrain[i].mMat = World;

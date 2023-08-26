@@ -209,7 +209,6 @@ public:
 					float lenght = glm::length(horizontalDir);
 					horizontalDir = glm::mix(directionAtJump, horizontalDir, glm::clamp((glm::dot(horizontalDir, lastHorizontalDir) + 1)/2 + bias, 0.f, 1.f));
 					horizontalDir = glm::normalize(horizontalDir) * lenght;
-					std::cout << glm::clamp((glm::dot(directionAtJump, lastHorizontalDir) + 1) / 2, 0.f, 1.f) << "\n";
 					currvelocity_h = glm::length(currvelocity_h) < glm::length(INITIAL_MOVE_SPEED_AIR * horizontalDir) ?
 						INITIAL_MOVE_SPEED_AIR * horizontalDir : 
 						currvelocity_h + (MOVE_FORCE_AIR) * horizontalDir * glm::length(currvelocity_h) * deltaT;
