@@ -55,31 +55,33 @@ class CGProject : public BaseProject {
 
 	float grassSwayRand[GRASS_INSTANCES], treeSwayRand[TREE_INSTANCES], birchSwayRand[BIRCH_INSTANCES], pineSwayRand[PINE_INSTANCES], gplantSwayRand[GPLANT_INSTANCES];
 
+	int grassInstances = 0;
 	// Current aspect ratio (used by the callback that resized the window
 	float winW, winH, Ar;
 
 	// Descriptor Layouts ["classes" of what will be passed to the shaders]
-	DescriptorSetLayout DSLGubo, DSLMesh, DSLMeshNorm, DSLTerrain, DSLSkyBox, DSLOverlay;
+	DescriptorSetLayout DSLGubo, DSLMesh, DSLMeshNorm, DSLTerrain, DSLGrassB, DSLSkyBox, DSLOverlay;
 
 	// Vertex formats
 	VertexDescriptor VMesh, VTerrain, VSkyBox, VOverlay;
 
 	// Pipelines [Shader couples]
-	Pipeline PMesh, PMeshSway, PMeshNorm, PGround, PSkyBox, POverlay;
+	Pipeline PMesh, PMeshSway, PMeshNorm, PGround, PGrassB, PSkyBox, POverlay;
 
 	// Models, textures and Descriptors (values assigned to the uniforms)
 	// Please note that Model objects depends on the corresponding vertex structure
 	Model<VertexSkyBox> MSkyBox;
-	Model<VertexMesh> MShroom, MGrass[GRASS_MODELS], MBirch, MTree, MPine, MRock[ROCK_MODELS], MWall, MGplant, MFloat, MSpike, MScroll;
+	Model<VertexMesh> MShroom, MGrass[GRASS_MODELS], MGrassB, MBirch, MTree, MPine, MRock[ROCK_MODELS], MWall, MGplant, MFloat, MSpike, MScroll;
 	Model<VertexTerrain> MTerrain;
 	Model<VertexOverlay> MText, MHUD[4];
 
-	DescriptorSet DSGubo, DSTerrain[TERRAIN_INSTANCES], DSShroom, DSGrass[GRASS_INSTANCES], DSBirch[BIRCH_INSTANCES], DSTree[TREE_INSTANCES], DSPine[PINE_INSTANCES], DSRock[ROCK_INSTANCES], DSWall[WALL_INSTANCES],
+	DescriptorSet DSGubo, DSTerrain[TERRAIN_INSTANCES], DSShroom, DSGrass[GRASS_INSTANCES], DSGrassB, DSBirch[BIRCH_INSTANCES], DSTree[TREE_INSTANCES], DSPine[PINE_INSTANCES], DSRock[ROCK_INSTANCES], DSWall[WALL_INSTANCES],
 		DSScroll[SCROLL_INSTANCES], DSGplant[GPLANT_INSTANCES], DSFloat[FLOAT_INSTANCES], DSSpike[SPIKE_INSTANCES], DSText, DSHUD[4], DSSkyBox;
 
 	Texture TTerrain, TTerrain2, TTerrainNoise, TTerrain_n, TTerrain2_n, TTerrainHeight, TTerrain_MRAO, TTerrain2_MRAO;
 	Texture TShroom, TShroom_MRAO;
 	Texture TGrass, TGrass_MRAO;
+	Texture TGrassB, TGrassB_MRAO;
 	Texture TBirch, TBirch_MRAO;
 	Texture TTree, TTree_MRAO;
 	Texture TPine, TPine_MRAO;
@@ -96,9 +98,11 @@ class CGProject : public BaseProject {
 	// C++ storage for uniform variables
 	MeshUniformBlock uboTerrain[TERRAIN_INSTANCES], uboShroom, uboRock[ROCK_INSTANCES], uboWall[WALL_INSTANCES], uboScroll[SCROLL_INSTANCES], uboFloat[FLOAT_INSTANCES];
 	MeshSwayUniformBlock uboGrass[GRASS_INSTANCES], uboBirch[BIRCH_INSTANCES], uboTree[TREE_INSTANCES], uboPine[PINE_INSTANCES], uboGplant[GPLANT_INSTANCES], uboSpike[SPIKE_INSTANCES];
+	GrassUniformBlock uboGrassB;
 	SkyBoxUniformBlock uboSkyBox;
 	OverlayUniformBlock uboText, uboHUD[4];
 	GlobalUniformBlock gubo;
+	GrassInstanceData instanceDataGrassB[MAX_GRASS_INSTANCES];
 
 	BoundingSphere bsShroom;
 	BoundingBox bbShroom, bbTerrain[TERRAIN_INSTANCES], bbBirch[BIRCH_INSTANCES*2], bbTree[TREE_INSTANCES*2], bbPine[PINE_INSTANCES], bbWall[WALL_INSTANCES], bbScroll[SCROLL_INSTANCES],  bbSpike[SPIKE_INSTANCES],
@@ -125,6 +129,7 @@ class CGProject : public BaseProject {
 		
 		// Descriptor pool sizes
 		uniformBlocksInPool = 400;
+		storagesInPool = 10;
 		texturesInPool = 400;
 		setsInPool = 400;
 		
@@ -166,7 +171,28 @@ class CGProject : public BaseProject {
 			gplantSwayRand[i] = RandFloat(0, 3.14f);
 		}
 		//Algorithmically place objects in the scene
-		
+			//Left start
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(-10.f, -0.5f, 6.5), 3, 2, .9f, glm::vec3(1));
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(-14, -0.5f, 10.5), 4, 2.5f, .9f, glm::vec3(1));
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(-13.5f, -0.5f, -4.6), 3.5, 2, .9f, glm::vec3(1));
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(-20.5f, -0.1f, -9.f), 2.5, 2, .9f, glm::vec3(1));
+			//Pine forest
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(-3.f, -0.5f, -22.5), 1.2, 2.2, .9f, glm::vec3(1));
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(7.f, -0.5f, -25), 4.5, 4, .9f, glm::vec3(1));
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(10.5f, -0.5f, -20.5), 3, 3.5, .9f, glm::vec3(1));
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(8.f, -0.5f, -20.5), 1.5, 1, .9f, glm::vec3(1));
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(14.f, -0.5f, -35.5), 2.5, 1.5, .9f, glm::vec3(1));
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(18.f, -0.5f, -26.5), 2, 1, .9f, glm::vec3(1));
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(23.f, -0.5f, -14.5), 1.5, 2, .9f, glm::vec3(1));
+			//Temple
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(-26.5f, -0.2f, -40.f), 4, 3, .9f, glm::vec3(1));
+			//Upper
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(12.5f, 5.f, -67.f), 7.5, 7, 1.3f, glm::vec3(1.5));
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(37.5f, 5.f, -60.f), 4, 2, 1.3f, glm::vec3(1.5));
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(20.f, 5.f, -71.5f), 2, 4, 1.3f, glm::vec3(1.5));
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(35.f, 5.f, -71.5f), 2.5, 5, 1.3f, glm::vec3(1.5));
+		std::cout << "Placed " << grassInstances << " grass instances.";
+
 		//Define bounding boxes for collision and their ubo for debugging
 		bsShroom.pos = glm::vec3(0, controller.getCharOriginOffset_y(), 0);
 		bsShroom.radius = 0.6f;
@@ -182,7 +208,7 @@ class CGProject : public BaseProject {
 
 		for (int i = 0; i < TERRAIN_INSTANCES; i++)
 		{
-			bbTerrain[i].pos = glm::vec3(0,-1.7,0);
+			bbTerrain[i].pos = glm::vec3(0,-1.85f,0);
 			bbTerrain[i].halfExtents = glm::vec3(20, 2.0f, 20);
 			bbTerrain[i].canCollide = true;
 			bbTerrain[i].isEnemy = false;
@@ -411,6 +437,12 @@ class CGProject : public BaseProject {
 				{7, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},	//MRAO2
 				{8, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT}	//Noise
 			});
+		DSLGrassB.init(this, {
+				{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
+				{1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT},
+				{2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},
+				{3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT}
+			});
 		DSLSkyBox.init(this, {
 				{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
 				{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},	//Cubic day
@@ -493,6 +525,9 @@ class CGProject : public BaseProject {
 		PGround.init(this, &VTerrain, "shaders/GroundVert.spv", "shaders/GroundFrag.spv", { &DSLGubo, &DSLTerrain });
 		PGround.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
 			VK_CULL_MODE_BACK_BIT, false);
+		PGrassB.init(this, &VMesh, "shaders/GrassVert.spv", "shaders/GrassFrag.spv", { &DSLGubo, &DSLGrassB });
+		PGrassB.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
+			VK_CULL_MODE_NONE, false);
 		PSkyBox.init(this, &VSkyBox,"shaders/SkyBoxVert.spv", "shaders/SkyBoxFrag.spv", { &DSLGubo, &DSLSkyBox });
 		PSkyBox.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
 			VK_CULL_MODE_NONE, false);
@@ -512,6 +547,7 @@ class CGProject : public BaseProject {
 		for (int i = 0; i < GRASS_MODELS; i++) {
 			MGrass[i].init(this,   &VMesh, string_format("Models/Grass/grass%d.gltf", i+1), GLTF);
 		}
+		MGrassB.init(this, &VMesh, "Models/GrassBillboard/grassbillboard.gltf", GLTF);
 		MBirch.init(this, &VMesh, "Models/Birch/birch.gltf", GLTF);
 		MPine.init(this, &VMesh, "Models/Pine/Pine.gltf", GLTF);
 		MTree.init(this, &VMesh, "Models/Tree/tree.gltf", GLTF);
@@ -557,13 +593,16 @@ class CGProject : public BaseProject {
 		TTerrain2_n.init(this, "textures/Ground/Stylized_02_Stone_Ground_normal.jpg", VK_FORMAT_R8G8B8A8_UNORM);
 		TTerrain2_MRAO.init(this, "textures/Ground/Stylized_02_Stone_Ground_MRAO.jpg");
 		TTerrainNoise.init(this, "textures/Ground/Noise5.png");
-		TTerrainHeight.init(this, "textures/Ground/HeightMap.png");
+		TTerrainHeight.init(this, "textures/Ground/Noise4.png");
 
 		TShroom.init(this, "textures/ShroomFriend/mushroom_friend_baseColor.png");
 		TShroom_MRAO.init(this, "textures/ShroomFriend/mushroom_friend_baseColor_MRAO.png");
 
 		TGrass.init(this, "textures/Grass/GrassGrass_MAT_baseColor.png");
-		TGrass_MRAO.init(this,   "textures/Grass/GrassGrass_MAT_baseColor_MRAO.png");
+		TGrass_MRAO.init(this, "textures/Grass/GrassGrass_MAT_baseColor_MRAO.png");
+
+		TGrassB.init(this, "textures/GrassBillboard/grassBillboard_baseColor7.png");
+		TGrassB_MRAO.init(this, "textures/GrassBillboard/grassBillboard_MRAO.png");
 
 		TBirch.init(this, "textures/Birch/birch_red_mat_baseColor.png");
 		TBirch_MRAO.init(this, "textures/Birch/birch_red_mat_baseColor_MRAO.png");
@@ -627,6 +666,7 @@ class CGProject : public BaseProject {
 		PMeshSway.create();
 		PMeshNorm.create();
 		PGround.create();
+		PGrassB.create();
 		PSkyBox.create();
 		POverlay.create();
 		PDebug.create();
@@ -662,6 +702,12 @@ class CGProject : public BaseProject {
 						{3, TEXTURE, 0, &TDummy_b}
 					});
 		}
+		DSGrassB.init(this, &DSLGrassB, {
+						{0, UNIFORM, sizeof(GrassUniformBlock), nullptr},
+						{1, STORAGE, sizeof(GrassInstanceData) * MAX_GRASS_INSTANCES, nullptr},
+						{2, TEXTURE, 0, &TGrassB},
+						{3, TEXTURE, 0, &TGrassB_MRAO},
+			});
 		for (int i = 0; i < BIRCH_INSTANCES; i++)
 		{
 			DSBirch[i].init(this, &DSLMesh, {
@@ -780,6 +826,7 @@ class CGProject : public BaseProject {
 		PMeshSway.cleanup();
 		PMeshNorm.cleanup();
 		PGround.cleanup();
+		PGrassB.cleanup();
 		PSkyBox.cleanup();
 		POverlay.cleanup();
 		PDebug.cleanup();
@@ -789,6 +836,7 @@ class CGProject : public BaseProject {
 		{
 			DSGrass[i].cleanup();
 		}
+		DSGrassB.cleanup();
 		for (int i = 0; i < BIRCH_INSTANCES; i++)
 		{
 			DSBirch[i].cleanup();
@@ -851,6 +899,8 @@ class CGProject : public BaseProject {
 		// Cleanup textures
 		TGrass.cleanup();
 		TGrass_MRAO.cleanup();
+		TGrassB.cleanup();
+		TGrassB_MRAO.cleanup();
 		TTerrain.cleanup();
 		TTerrain2.cleanup();
 		TTerrain_n.cleanup();
@@ -903,6 +953,7 @@ class CGProject : public BaseProject {
 		for (int i = 0; i < GRASS_MODELS; i++) {
 			MGrass[i].cleanup();
 		}
+		MGrassB.cleanup();
 		MShroom.cleanup();
 		MBirch.cleanup();
 		MPine.cleanup();
@@ -932,6 +983,7 @@ class CGProject : public BaseProject {
 		DSLMeshNorm.cleanup();
 		DSLTerrain.cleanup();
 		DSLOverlay.cleanup();
+		DSLGrassB.cleanup();
 		DSLSkyBox.cleanup();
 		DSLBoundingBox.cleanup();
 		DSLGubo.cleanup();
@@ -941,6 +993,7 @@ class CGProject : public BaseProject {
 		PMeshSway.destroy();
 		PMeshNorm.destroy();
 		PGround.destroy();
+		PGrassB.destroy();
 		PSkyBox.destroy();
 		POverlay.destroy();
 		PDebug.destroy();
@@ -975,6 +1028,12 @@ class CGProject : public BaseProject {
 			vkCmdDrawIndexed(commandBuffer,
 				static_cast<uint32_t>(MFloat.indices.size()), 1, 0, 0, 0);
 		}
+		
+		PGrassB.bind(commandBuffer);
+		MGrassB.bind(commandBuffer);
+		DSGrassB.bind(commandBuffer, PGrassB, 1, currentImage);
+		vkCmdDrawIndexed(commandBuffer,
+			static_cast<uint32_t>(MGrassB.indices.size()), grassInstances, 0, 0, 0);
 
 		PMeshSway.bind(commandBuffer);
 		for (int i = 0; i < GRASS_INSTANCES; i++){
@@ -1123,13 +1182,17 @@ class CGProject : public BaseProject {
 			DSShroom.map(currentImage, &uboShroom, sizeof(uboShroom), 0);
 		}
 		else if (gameState == GAME_STATE_PLAY) {
-			freqDay = 0.025f;
+			freqDay = 0.025f * 5;
 			
 			float elapsedSecondsLastPress = std::chrono::duration<float, std::chrono::seconds::period>
 				(currTime - lastPressTime).count();
 			if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS && elapsedSecondsLastPress >= minimumPressDelay) {
 				lastPressTime = currTime;
 				DEBUG = DEBUG == 1? 0 : 1;
+			}
+			if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+				reset();
+				gameState = GAME_STATE_START_SCREEN;
 			}
 			//Ask controller to move player character and camera based on inputs
 			//Update immediately the charachter to better check for enemy collisions
@@ -1162,7 +1225,7 @@ class CGProject : public BaseProject {
 		else if (gameState == GAME_STATE_GAME_OVER) {
 			if (controller.gameOver(elapsed_seconds)) {
 				reset();
-				gameState = 0;
+				gameState = GAME_STATE_START_SCREEN;
 			}
 			else
 			{
@@ -1191,13 +1254,27 @@ class CGProject : public BaseProject {
 		gubo.plantPointDist = 1.f;
 		gubo.plantPointDecay = 0.6f;
 		DSGubo.map(currentImage, &gubo, sizeof(gubo), 0);
-
+		
+		uboGrassB.amb = 0.2f;
+		uboGrassB.sColor = glm::vec3(1.0f);
+		uboGrassB.vpMat = Prj * View;;
+		DSGrassB.map(currentImage, &uboGrassB, sizeof(uboGrassB), 0);
+		for (int i = 0; i < grassInstances; i++)
+		{
+			World = glm::translate(glm::mat4(1), grassBTransform[i].pos) *
+					glm::rotate(glm::mat4(1), glm::radians(grassBTransform[i].rot.y), glm::vec3(0, 1, 0)) *
+					glm::scale(glm::mat4(1), grassBTransform[i].scale * (float)toShow);
+			instanceDataGrassB[i].time = elapsed_seconds; instanceDataGrassB[i].ratio_xz = .5f; instanceDataGrassB[i].scale = 3; instanceDataGrassB[i].offset = 0;
+			instanceDataGrassB[i].mMat = World;
+			instanceDataGrassB[i].nMat = glm::inverse(glm::transpose(World));
+		}
+		DSGrassB.map(currentImage, &instanceDataGrassB, sizeof(instanceDataGrassB), 1);
 		for (int i = 0; i < GRASS_INSTANCES; i++)
 		{
 			World = glm::translate(glm::mat4(1), grassTransform[i].pos) *
 					glm::rotate(glm::mat4(1), glm::radians(grassTransform[i].rot.y), glm::vec3(0, 1, 0)) *
 					glm::scale(glm::mat4(1), grassTransform[i].scale * (float)toShow);
-			uboGrass[i].amb = 0.2f; uboGrass[i].roughOff = 0.3f; uboGrass[i].aoOff = 0.0f; uboGrass[i].sColor = glm::vec3(1.0f); 
+			uboGrass[i].amb = 0.2f; uboGrass[i].roughOff = 0.f; uboGrass[i].aoOff = 0.0f; uboGrass[i].sColor = glm::vec3(1.0f); 
 			uboGrass[i].time = (elapsed_seconds + grassSwayRand[i])*2; uboGrass[i].ratio_xz = 0.5f; uboGrass[i].scale = 50; uboGrass[i].offset = 0;
 			uboGrass[i].mvpMat = Prj * View * World;
 			uboGrass[i].mMat = World;
@@ -1209,7 +1286,7 @@ class CGProject : public BaseProject {
 			World = glm::translate(glm::mat4(1), birchTransform[i].pos) *
 					glm::rotate(glm::mat4(1), glm::radians(birchTransform[i].rot.y), glm::vec3(0, 1, 0)) *
 					glm::scale(glm::mat4(1), birchTransform[i].scale * ((i == 0 || i == 1 || i == 2) ? 1 - (float)toShow : (float)toShow));
-			uboBirch[i].amb = 0.2f; uboBirch[i].roughOff = 0.0f; uboBirch[i].aoOff = 0.0f; uboBirch[i].sColor = glm::vec3(1.0f); 
+			uboBirch[i].amb = 0.2f; uboBirch[i].roughOff = 1.0f; uboBirch[i].aoOff = 0.0f; uboBirch[i].sColor = glm::vec3(1.0f); 
 			uboBirch[i].time = elapsed_seconds + birchSwayRand[i]; uboBirch[i].ratio_xz = 0.7f; uboBirch[i].scale = 6; uboBirch[i].offset = 0.2f;
 			uboBirch[i].mvpMat = Prj * View * World;
 			uboBirch[i].mMat = World;

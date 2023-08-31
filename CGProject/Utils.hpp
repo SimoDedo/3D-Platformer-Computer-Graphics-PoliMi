@@ -49,6 +49,23 @@ struct MeshSwayUniformBlock {
 	alignas(4) float offset;	//Controls the height starting point of the swaying effect
 };
 
+struct GrassUniformBlock {
+	alignas(4) float amb;
+	alignas(16) glm::vec3 sColor;
+	alignas(16) glm::mat4 vpMat; //Pass only the view projection matrix to apply other transformation in the shader
+
+};
+
+struct GrassInstanceData {
+	alignas(16) glm::mat4 mMat;
+	alignas(16) glm::mat4 nMat;
+
+	alignas(4) float time;		//Time elapsed used for continuous value
+	alignas(4) float ratio_xz;	//Ratio between swaying on x and z plane
+	alignas(4) float scale;		//Controls how much the object sways
+	alignas(4) float offset;	//Controls the height starting point of the swaying effect
+};
+
 struct SkyBoxUniformBlock {
 	alignas(4) float dayValue;
 	alignas(4) float sunriseValue;
@@ -285,4 +302,26 @@ bool boxCollision(BoundingBox obj, BoundingBox other, float extraDist, glm::quat
 
 float aCoefficientParabola(glm::vec2 knownPoint, glm::vec2 vertex) {
 	return (knownPoint.y - vertex.y) / (glm::pow(knownPoint.x - vertex.x, 2));
+}
+
+int placeGrassPatch(Transform* container, int first, int lenght, glm::vec3 topLeft, float xSize, float zSize, float step, glm::vec3 scaleMultiplier) {
+	int index = first;
+	for (float i = 0; i <= xSize; i = i + step)
+	{
+		for (float j = 0; j <= zSize; j = j+ step) {
+			if (index >= lenght)
+				return index - first;
+			float rot = RandFloat(0, 180);
+			glm::vec3 scale = glm::vec3(RandFloat(0.5f, 0.8f)) * scaleMultiplier;
+			glm::vec2 randOffset = glm::vec2(RandFloat(-0.3f, 0.3f), RandFloat(-0.3f, 0.3f));
+			container[index].pos = glm::vec3(topLeft.x + i + randOffset.x, topLeft.y, topLeft.z + j + randOffset.y);
+			container[index].rot = glm::vec3(0, rot, 0);
+			container[index].scale = glm::vec3(scale);
+			container[index+1].pos = glm::vec3(topLeft.x + i + randOffset.x, topLeft.y, topLeft.z + j + randOffset.y);
+			container[index+1].rot = glm::vec3(0, rot + 90, 0);
+			container[index+1].scale = scale;
+			index += 2;
+		}
+	}
+	return index - first;
 }

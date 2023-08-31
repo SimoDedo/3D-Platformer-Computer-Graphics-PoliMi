@@ -24,3 +24,6 @@ glslc.exe Overlay.vert -o OverlayVert.spv
 
 glslc.exe Overlay.frag -o OverlayFrag.spv
 
+glslc.exe Grass.vert -o GrassVert.spv
+
+glslc.exe Grass.frag -o GrassFrag.spv

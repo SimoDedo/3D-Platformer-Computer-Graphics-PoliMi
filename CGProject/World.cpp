@@ -14,6 +14,9 @@
 #define SCROLL_INSTANCES 5
 #define FLOAT_INSTANCES 6
 
+#define MAX_GRASS_INSTANCES 500
+
+
 Transform terrainTransform[TERRAIN_INSTANCES] = {
 	{glm::vec3(0, -0.5, -20),			glm::vec3(0),				glm::vec3(2)},
 	{glm::vec3(30, 5, -73),				glm::vec3(0,180.f,0),		glm::vec3(1)},
@@ -21,6 +24,11 @@ Transform terrainTransform[TERRAIN_INSTANCES] = {
 
 Transform grassTransform[GRASS_INSTANCES] = {
 	{glm::vec3(1, 0.2f, 1),				glm::vec3(0.0f),			glm::vec3(0.0005f * 0)},
+};
+
+Transform grassBTransform[MAX_GRASS_INSTANCES] = {
+	{glm::vec3(1, -0.2f, 1),				glm::vec3(0.0f),			glm::vec3(0.5)},
+	{glm::vec3(1, -0.2f, 1),				glm::vec3(40.0f),			glm::vec3(0.5)},
 };
 
 Transform birchTransform[BIRCH_INSTANCES] = {
@@ -91,12 +99,12 @@ Transform rockTransform[ROCK_INSTANCES] = {
 	{glm::vec3(26.0f, 6.5f, -27.0f),	glm::vec3(0, 270.0f, 0),	glm::vec3(5.5f, 2.f, 5.5f)},
 	{glm::vec3(23.0f, 8.3f, -36.0f),	glm::vec3(0, 0.0f, 0),		glm::vec3(6.2f, 1.7f, 6.2f)},
 	//2
-	{glm::vec3(15.0f, 1, 8.0f),			glm::vec3(0, 0.0f, 0),		glm::vec3(2, 1.5, 4)},
-	{glm::vec3(17.0f, 1.5f, 0.0f),		glm::vec3(0, 180.0f, 0),	glm::vec3(3, 3, 5)},
-	{glm::vec3(21.0f, 2.5, 7.0f),		glm::vec3(0, 90.0f, 0),		glm::vec3(4, 4.5, 6)},
-	{glm::vec3(25.0f, 3.5, -2.0f),		glm::vec3(0, 0.0f, 0),		glm::vec3(5, 6, 6)},
+	{glm::vec3(15.0f, 0.5, 8.0f),			glm::vec3(0, 0.0f, 0),		glm::vec3(2, 1.5, 4)},
+	{glm::vec3(17.0f, 1.2f, 0.0f),		glm::vec3(0, 180.0f, 0),	glm::vec3(3, 3, 5)},
+	{glm::vec3(21.0f, 2.2, 7.0f),		glm::vec3(0, 90.0f, 0),		glm::vec3(4, 4.5, 6)},
+	{glm::vec3(25.0f, 3.2, -2.0f),		glm::vec3(0, 0.0f, 0),		glm::vec3(5, 6, 6)},
 	//3
-	{glm::vec3(23.0f, 8.3f, -36.0f),	glm::vec3(0, 0.0f, 0),		glm::vec3(0)},
+	{glm::vec3(8.0f, 1.5f, -35.5f),	glm::vec3(0, 45.0f, 0),		glm::vec3(3)},
 	//4
 	{glm::vec3(-10, 5.f, -35.f),		glm::vec3(0, 30.0f, 0),		glm::vec3(6.5f)},
 	{glm::vec3(-30, 5.f, -20.f),		glm::vec3(0, -45.0f, 0),	glm::vec3(6.5f)},
@@ -170,9 +178,9 @@ Transform wallTransform[WALL_INSTANCES] = {
 };
 
 Transform gplantTransform[GPLANT_INSTANCES] = {
-	{glm::vec3(-15.0f, -0.4f, -15.0f),	glm::vec3(0, 0.0f, 0),		glm::vec3(0.08f),},
-	{glm::vec3(12.5f, 0.3f, 5.0f),		glm::vec3(0, 0.0f, 0),		glm::vec3(0.08f),},
-	{glm::vec3(9.0f, -0.05f, -28.5f),	glm::vec3(0, 0.0f, 0),		glm::vec3(0.08f),},
+	{glm::vec3(-15.0f, -0.1f, -15.0f),	glm::vec3(0, 0.0f, 0),		glm::vec3(0.08f),},
+	{glm::vec3(12.5f, -0.25f, 5.0f),	glm::vec3(0, 0.0f, 0),		glm::vec3(0.08f),},
+	{glm::vec3(9.0f, -0.3f, -22.f),		glm::vec3(0, 0.0f, 0),		glm::vec3(0.08f),},
 };
 
 Transform spikeTransform[SPIKE_INSTANCES] = {
@@ -226,7 +234,7 @@ float spikeSpeed[SPIKE_INSTANCES] = {
 
 Transform scrollTransform[SCROLL_INSTANCES] = {
 	{glm::vec3(-14.0f, 4.5f, 6.0f),		glm::vec3(0.0f, 0.0f, 45.0f),	glm::vec3(1.f)},
-	{glm::vec3(-25.0f, 1.f, -40.0f),	glm::vec3(0.0f, 0.0f, 45.0f),	glm::vec3(1.f)},
+	{glm::vec3(-24.5f, 1.f, -38.5f),	glm::vec3(0.0f, 0.0f, 45.0f),	glm::vec3(1.f)},
 	{glm::vec3(25.0f, 10.f, -7.0f),		glm::vec3(0.0f, 0.0f, 45.0f),	glm::vec3(1.f)},
 	{glm::vec3(30.0f, 12.f, -67.0f),	glm::vec3(0.0f, 0.0f, 45.0f),	glm::vec3(1.f)},
 	{glm::vec3(-6.0f, 9.f, -11.0f),		glm::vec3(0.0f, 0.0f, 45.0f),	glm::vec3(1.f)},

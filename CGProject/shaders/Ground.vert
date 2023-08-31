@@ -28,7 +28,7 @@ layout(location = 4) out vec2 outUV_Noise;
 
 void main() {
 	//Apply HeightMap to position to have ground shape
-	vec4 pos = vec4(inPosition.x, inPosition.y + texture(texHeight, inUV_Noise).r, inPosition.z, 1.0);
+	vec4 pos = vec4(inPosition.x, inPosition.y + texture(texHeight, inUV_Noise).r * 0.2f, inPosition.z, 1.0);
 	gl_Position = ubo.mvpMat * pos;
 	fragPos = (ubo.mMat * pos).xyz;
 
