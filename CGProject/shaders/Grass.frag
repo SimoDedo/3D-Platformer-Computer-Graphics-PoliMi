@@ -35,7 +35,6 @@ float g(vec3 n, vec3 a, float rho){
 	return 2.0f / (1.0f + sqrt(1.0f+pow(rho,2.0f)*((1-pow(clamp(dot(n,a),0.00001f,1.0f),2.0f))/(pow(clamp(dot(n,a),0.00001,1.0f),2.0f)))));
 }
 
-
 vec3 GGX(vec3 V, vec3 N, vec3 L, vec3 Md, float F0, float metallic, float roughness) {
 	//vec3 V  - direction of the viewer
 	//vec3 N  - normal vector to the surface
@@ -59,12 +58,12 @@ vec3 GGX(vec3 V, vec3 N, vec3 L, vec3 Md, float F0, float metallic, float roughn
 	return (1.0f - metallic)*(Md * clamp(dot(L, N), 0.00001,1.0f)) + metallic * (Ms * ((D*F*G)/(4.0f*clamp(dot(V,N),0.00001,1.0f))));
 }
 
-vec3 Lambert(vec3 V, vec3 N, vec3 L, vec3 Md) {
-	return Md * max(dot(L, N), 0);
-}
-
 vec3 Phong(vec3 V, vec3 N, vec3 L, vec3 Ms, float gamma){
 	return Ms * pow(clamp(dot(V,-reflect(L,N)),0,1), gamma);
+}
+
+vec3 Lambert(vec3 V, vec3 N, vec3 L, vec3 Md) {
+	return Md * max(dot(L, N), 0);
 }
 
 void main() {
@@ -89,7 +88,7 @@ void main() {
 	vec3 DirectLD = normalize(gubo.DlightDir);
 	vec3 DirectLM = gubo.DlightColor;
 
-	vec3 DirectBRDF = Lambert(V, N, DirectLD, MD);// + Phong(V, N, DirectLD, MS, .1f);//GGX(V, N, DirectLD, MD, 0.5f, MRAO.r, clamp(MRAO.g, 0.0f, 1.0f));
+	vec3 DirectBRDF = Lambert(V, N, DirectLD, MD);
 
 	vec3 Direct =  DirectLM * DirectBRDF;
 
@@ -99,21 +98,21 @@ void main() {
 	vec3 PlantPointLD = normalize(gubo.plantPointPos0 - fragPos);
 	vec3 PlantPointLM = gubo.plantPointColor.rgb * pow(gubo.plantPointDistance / length(gubo.plantPointPos0 - fragPos), gubo.plantPointDecay);
 
-	vec3 PlantPointBRDF = Lambert(V, N,  PlantPointLD, MD); //+ Phong(V, N,  PlantPointLD, MS, 450.f); //GGX(V, N, PlantPointLD, MD, 0.5f, MRAO.r, clamp(MRAO.g, 0.0f, 1.0f));
+	vec3 PlantPointBRDF = Lambert(V, N,  PlantPointLD, MD);
 
 	PlantPoint[0] =  PlantPointLM * PlantPointBRDF;
 
 	PlantPointLD = normalize(gubo.plantPointPos1 - fragPos);
 	PlantPointLM = gubo.plantPointColor.rgb * pow(gubo.plantPointDistance / length(gubo.plantPointPos1 - fragPos), gubo.plantPointDecay);
 
-	PlantPointBRDF = Lambert(V, N,  PlantPointLD, MD); //+ Phong(V, N,  PlantPointLD, MS, 450.f); //GGX(V, N, PlantPointLD, MD, 0.5f, MRAO.r, clamp(MRAO.g, 0.0f, 1.0f));
+	PlantPointBRDF = Lambert(V, N,  PlantPointLD, MD);
 
 	PlantPoint[1] =  PlantPointLM * PlantPointBRDF;
 
 	PlantPointLD = normalize(gubo.plantPointPos2 - fragPos);
 	PlantPointLM = gubo.plantPointColor.rgb * pow(gubo.plantPointDistance / length(gubo.plantPointPos2 - fragPos), gubo.plantPointDecay);
 
-	PlantPointBRDF = Lambert(V, N,  PlantPointLD, MD); //+ Phong(V, N,  PlantPointLD, MS, 450.f); //GGX(V, N, PlantPointLD, MD, 0.5f, MRAO.r, clamp(MRAO.g, 0.0f, 1.0f));
+	PlantPointBRDF = Lambert(V, N,  PlantPointLD, MD);
 
 	PlantPoint[2] =  PlantPointLM * PlantPointBRDF;
 

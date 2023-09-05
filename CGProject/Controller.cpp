@@ -4,6 +4,7 @@
 
 
 
+//Class that represents the controller for the player character to handle its movement (horizontal and jumping) and health.
 class Controller {
 private :
 	// Parameters
@@ -15,11 +16,11 @@ private :
 	const glm::vec3 StartingPosition = glm::vec3(-1,5.5f,10);
 	const glm::quat StartingRotation =
 		glm::rotate(glm::quat(1, 0, 0, 0), glm::radians(0.0f), glm::vec3(0, 1, 0));
-	float scalingFactor = 0.8f;
+	float scalingFactor = .8f;
 
 	// Camera target height and distance
 	const float camHeight = 0.45;
-	const float camDist = 4.5f;
+	const float camDist = 5.f;
 
 	// Camera Pitch limits
 	const float minPitch = glm::radians(-60.0f);
@@ -46,8 +47,9 @@ private :
 	float CamRho;
 
 	BoundingBox* bbCharacter;
+	BoundingSphere* bsCharacter;
 	//Vertical (rough) offset from the origin of the model (in the feet) and the ceneter of the geometry
-	float charOriginOffset_y = 0.27f;
+	float charOriginOffset_y = 0.3f;
 
 	//Movement
 	const float MAX_ZONE = 0.7f;
@@ -56,12 +58,13 @@ private :
 	const float INITIAL_MOVE_SPEED_AIR = 1.3f;
 	const float MOVE_FORCE = 7.f;
 	const float MOVE_FORCE_AIR = 5.f;
-	glm::vec3 currvelocity_h = glm::vec3(0.0f);
+	glm::vec3 currvelocity_h = glm::vec3(0, 0, -1);
+	glm::vec3 lastvelocity_h = glm::vec3(0, 0, -1);
 	glm::vec3 directionAtJump = glm::vec3(0.0f);
-	glm::vec3 lastHorizontalDir = glm::vec3(0);
+	glm::vec3 lastHorizontalDir = glm::vec3(0, 0, -1);
 
 	//Jump
-	bool wasGrounded;
+	bool wasGrounded = false;
 	bool jumpWasPressed = false;
 	bool peakReached = false;
 
@@ -80,22 +83,26 @@ private :
 	const float MAX_HEALTH = 3;
 	float health;
 	const float INVINCIBILITY_TIME = 1.5;
-	float lastHitTime = 0;
 	const float FLASHING_FREQ = 0.15f;
 	float counterHitTime = 0;
+	float lastHitTime = 0;
 
 	//Game over
 	const float GAME_OVER_DURATION = 2;
 	float gameOverTime = 0;
 	float shrink = 1;
 
+	// Updates the stretch of the character based on the current state (landing and jumping).
 	void updateStretch(int state, float deltaT) {
+		//Time that makes up a half a period of the stretch function
 		const static float timeStretchJumping = 0.15f;
-		const static float stretchJumpingRange = 0.4f;
 		const static float timeStretchLanding = 0.2f;
+		//How much the stretch extends
+		const static float stretchJumpingRange = 0.4f;
 		const static float stretchLandingRange = 0.5f;
 		static float time = 0;
 		static int lastState;
+		// Resets time on change of state
 		if (state != lastState) {
 			lastState = state;
 			time = 0;
@@ -104,23 +111,25 @@ private :
 			time += deltaT;
 
 		if (state == STRETCH_JUMPING) {
+			float offset = 3.14 / 2 + 1;
 			if (time < timeStretchJumping)
-				stretch = glm::vec3(1, glm::sin(time * ((2 * 3.14) / (timeStretchJumping * 2.f)) - 3.14 / 2 - 1) * stretchJumpingRange + 0.8, 1);
+				stretch = glm::vec3(1, glm::sin(time * ((2 * 3.14) / (timeStretchJumping * 2.f)) - offset) * stretchJumpingRange + 0.8, 1);
 			else {
-				stretch = glm::vec3(1, glm::sin(timeStretchJumping * ((2 * 3.14) / (timeStretchJumping * 2.f)) - 3.14 / 2 - 1) * stretchJumpingRange + 0.9, 1);
+				stretch = glm::vec3(1, glm::sin(timeStretchJumping * ((2 * 3.14) / (timeStretchJumping * 2.f)) - offset) * stretchJumpingRange + 0.9, 1);
 				stretchState = STRETCH_NONE;
 			}
 
 		}
 		else if (state == STRETCH_LANDING) {
+			float offset = 3.14;
 			if (time < timeStretchLanding)
 				stretch = glm::vec3(glm::sin(time * ((2 * 3.14) / (timeStretchLanding * 2.f))) * stretchLandingRange + 1,
-					glm::sin(time * ((2 * 3.14) / (timeStretchLanding * 2.f)) - 3.14) * stretchLandingRange + 1,
-					glm::sin(time * ((2 * 3.14) / (timeStretchLanding * 2.f))) * stretchLandingRange + 1);
+									glm::sin(time * ((2 * 3.14) / (timeStretchLanding * 2.f)) - offset) * stretchLandingRange + 1,
+									glm::sin(time * ((2 * 3.14) / (timeStretchLanding * 2.f))) * stretchLandingRange + 1);
 			else {
 				stretch = glm::vec3(glm::sin(timeStretchLanding * ((2 * 3.14) / (timeStretchLanding * 2.f))) * stretchLandingRange + 1,
-					glm::sin(timeStretchLanding * ((2 * 3.14) / (timeStretchLanding * 2.f)) - 3.14) * stretchLandingRange + 1,
-					glm::sin(timeStretchLanding * ((2 * 3.14) / (timeStretchLanding * 2.f))) * stretchLandingRange + 1);
+									glm::sin(timeStretchLanding * ((2 * 3.14) / (timeStretchLanding * 2.f)) - offset) * stretchLandingRange + 1,
+									glm::sin(timeStretchLanding * ((2 * 3.14) / (timeStretchLanding * 2.f))) * stretchLandingRange + 1);
 				stretchState = STRETCH_NONE;
 			}
 		}
@@ -145,8 +154,9 @@ public:
 		health = MAX_HEALTH;
 	}
 
-	void init(BoundingBox &bbChar) {
+	void init(BoundingBox &bbChar, BoundingSphere &bsChar) {
 		bbCharacter = &bbChar;
+		bsCharacter = &bsChar;
 	}
 
 	void moveCharacterAndCamera(float Ar, float deltaT, glm::vec3 m, glm::vec3 r, bool jump, std::vector<BoundingBox *> collisionBoxes) {
@@ -174,7 +184,7 @@ public:
 
 			//On ground
 			if (wasGrounded) {
-				//If the velocity is less than the minimum (relative to the amount that the joystick was moved in, which was scalend by the lenght of m)
+				//If the velocity is less than the minimum (relative to the amount that the joystick was moved in, which was scaled by the lenght of m)
 				//Then we start by moving by this minimum speed, otherwise we increase the velocity using a force
 				currvelocity_h = glm::length(currvelocity_h) < glm::length(INITIAL_MOVE_SPEED * horizontalDir) ?
 						INITIAL_MOVE_SPEED * horizontalDir : 
@@ -187,7 +197,7 @@ public:
 				if (directionAtJump == glm::vec3(0))
 					directionAtJump = horizontalDir;
 
-				//We calculate the dot product between the inputted direction and the direction where we jumped to have different behavior
+				//We calculate the dot product between the inputted direction and the direction where we jumped to have different behavior depending on how much we try to steer
 				float changeDirAir = glm::dot(horizontalDir, directionAtJump);
 				//If we are roughly keeping the same direction we simply update it similarly as we did to the grounded case
 				if (changeDirAir >= 0.7) {
@@ -211,7 +221,7 @@ public:
 					horizontalDir = glm::normalize(horizontalDir) * lenght;
 					currvelocity_h = glm::length(currvelocity_h) < glm::length(INITIAL_MOVE_SPEED_AIR * horizontalDir) ?
 						INITIAL_MOVE_SPEED_AIR * horizontalDir : 
-						currvelocity_h + (MOVE_FORCE_AIR) * horizontalDir * glm::length(currvelocity_h) * deltaT;
+						currvelocity_h + MOVE_FORCE_AIR * horizontalDir * glm::length(currvelocity_h) * deltaT;
 				}
 				//If we are completely changing direction, we instead increase to force to have a faster stopping and changing of direction, which leads to better control
 				else {
@@ -226,9 +236,9 @@ public:
 				glm::normalize(currvelocity_h) * glm::length(MAX_MOVE_SPEED * horizontalDir) :
 				currvelocity_h;
 			
-			//Update position
-			NewPos += currvelocity_h * deltaT;
-			lastHorizontalDir = horizontalDir;
+			//Update last horizontal direction
+			if(horizontalDir != glm::vec3(0))
+				lastHorizontalDir = horizontalDir;
 		}
 		else {
 			//If no direction was inputted, stop immediately when grounded for precise jumps
@@ -237,38 +247,34 @@ public:
 			//If jumping we keep the momentum instead
 			else 
 				currvelocity_h = currvelocity_h;
-
-			//Update position
-			NewPos += currvelocity_h * deltaT;
 		}
+		//Update position
+		NewPos += currvelocity_h * deltaT;
 		
-		//Check collisions while moving horizontally with rayCasting
+		//Check if we collided by moving horizontally with rayCasting
 		bool hit = false;
+		glm::vec3 currMovingDir = glm::normalize(currvelocity_h);
+		glm::vec3 currOrthoMovingDir = glm::normalize(glm::cross(currMovingDir, glm::vec3(0, 1, 0)));
 		for (int i = 0; i < collisionBoxes.size() && !hit; i++)
 		{
 			if (collisionBoxes.at(i)->canCollide) {
-				//bool hit1 = rayCollision(NewPos + glm::vec3(bbCharacter->halfExtents.x, 0, bbCharacter->halfExtents.z) + bbCharacter->pos,
-				//	horizontalDir, 0.001f, collisionBoxes.at(i));
-				//bool hit2 = rayCollision(NewPos + glm::vec3(-bbCharacter->halfExtents.x, 0, bbCharacter->halfExtents.z)+ bbCharacter->pos,
-				//	horizontalDir, 0.001f, collisionBoxes.at(i));
-				//bool hit3 = rayCollision(NewPos + glm::vec3(bbCharacter->halfExtents.x, 0, -bbCharacter->halfExtents.z) + bbCharacter->pos,
-				//	horizontalDir, 0.001f, collisionBoxes.at(i));
-				//bool hit4 = rayCollision(NewPos + glm::vec3(-bbCharacter->halfExtents.x, 0, -bbCharacter->halfExtents.z) + bbCharacter->pos,
-				//	horizontalDir, 0.001f, collisionBoxes.at(i));
-				//hit = hit1 || hit2 || hit3 || hit4;
-				//This version considers a PLANE that rotates with character orientation
-				bool hit1 = rayCollision(NewPos + bbCharacter->pos + lastHorizontalDir * bbCharacter->halfExtents.z,
+				//Considers a PLANE that rotates with character current moving direction
+				hit = rayCollision(NewPos + bbCharacter->pos + currMovingDir * bbCharacter->halfExtents.z,
 					lastHorizontalDir, 0.01f, collisionBoxes.at(i));
-				bool hit2 = rayCollision(NewPos + bbCharacter->pos + lastHorizontalDir * bbCharacter->halfExtents.z + glm::normalize(glm::cross(lastHorizontalDir, glm::vec3(0, 1, 0))) * bbCharacter->halfExtents.x,
+				hit = hit || rayCollision(NewPos + bbCharacter->pos + currMovingDir * bbCharacter->halfExtents.z + currOrthoMovingDir * bbCharacter->halfExtents.x,
 					lastHorizontalDir, 0.01f, collisionBoxes.at(i));
-				bool hit3 = rayCollision(NewPos + bbCharacter->pos + lastHorizontalDir * bbCharacter->halfExtents.z + glm::normalize(glm::cross(lastHorizontalDir, glm::vec3(0, 1, 0))) * (-bbCharacter->halfExtents.x),
+				hit = hit || rayCollision(NewPos + bbCharacter->pos + currMovingDir * bbCharacter->halfExtents.z + currOrthoMovingDir * (bbCharacter->halfExtents.x / 2.f),
 					lastHorizontalDir, 0.01f, collisionBoxes.at(i));
-				hit = hit1 || hit2 || hit3;
+				hit = hit || rayCollision(NewPos + bbCharacter->pos + currMovingDir * bbCharacter->halfExtents.z + currOrthoMovingDir * (-bbCharacter->halfExtents.x),
+						lastHorizontalDir, 0.01f, collisionBoxes.at(i));
+				hit = hit || rayCollision(NewPos + bbCharacter->pos + currMovingDir * bbCharacter->halfExtents.z + currOrthoMovingDir * (-bbCharacter->halfExtents.x / 2.f),
+					lastHorizontalDir, 0.01f, collisionBoxes.at(i));
 			}
 			else
 				hit = false;
 		}
 		if (!hit) { //Update position
+
 			Pos.x = NewPos.x;
 			Pos.z = NewPos.z;
 		}
@@ -285,18 +291,29 @@ public:
 		bool grounded = false;
 		int ground = -1;
 		//We chack if we are grounded first by rayCasting
+		if (currvelocity_h != glm::vec3(0)) {
+			lastvelocity_h = currvelocity_h;
+		}
+		glm::vec3 lastMovingDir = glm::normalize(lastvelocity_h);
+		glm::vec3 lastOrthoMovingDir = glm::normalize(glm::cross(lastMovingDir, glm::vec3(0, 1, 0)));
 		for (int i = 0; i < collisionBoxes.size() && !grounded; i++)
 		{
 			if (collisionBoxes.at(i)->canCollide) {
-				bool grounded1 = rayCollision(NewPos + glm::vec3(bbCharacter->halfExtents.x, 0, bbCharacter->halfExtents.z) + glm::vec3(-0.08, 0, -0.08),
+				int numPoints = 0;
+				bool grounded1 = rayCollision(NewPos + lastMovingDir * bbCharacter->halfExtents.z + lastOrthoMovingDir * bbCharacter->halfExtents.x,
 					glm::vec3(0, -1, 0), 0.01f, collisionBoxes.at(i));
-				bool grounded2 = rayCollision(NewPos + glm::vec3(-bbCharacter->halfExtents.x, 0, bbCharacter->halfExtents.z) + glm::vec3(0.08, 0, 0-.08),
+				bool grounded2 = rayCollision(NewPos + lastMovingDir * bbCharacter->halfExtents.z + lastOrthoMovingDir * -bbCharacter->halfExtents.x,
 					glm::vec3(0, -1, 0), 0.01f, collisionBoxes.at(i));
-				bool grounded3 = rayCollision(NewPos + glm::vec3(bbCharacter->halfExtents.x, 0, -bbCharacter->halfExtents.z) + glm::vec3(-0.08, 0, 0.08),
+				bool grounded3 = rayCollision(NewPos + lastMovingDir * -bbCharacter->halfExtents.z + lastOrthoMovingDir * bbCharacter->halfExtents.x,
 					glm::vec3(0, -1, 0), 0.01f, collisionBoxes.at(i));
-				bool grounded4 = rayCollision(NewPos + glm::vec3(-bbCharacter->halfExtents.x, 0, -bbCharacter->halfExtents.z) + glm::vec3(0.08, 0, 0.08),
+				bool grounded4 = rayCollision(NewPos + lastMovingDir * -bbCharacter->halfExtents.z + lastOrthoMovingDir * -bbCharacter->halfExtents.x,
 					glm::vec3(0, -1, 0), 0.01f, collisionBoxes.at(i));
-				grounded = grounded1 || grounded2 || grounded3 || grounded4;
+				numPoints = grounded1 ? numPoints + 1 : numPoints;
+				numPoints = grounded2 ? numPoints + 1 : numPoints;
+				numPoints = grounded3 ? numPoints + 1 : numPoints;
+				numPoints = grounded4 ? numPoints + 1 : numPoints;
+				//We are grounded if at least two edges of the character base are on the ground (which avoids clipping because of the charachter rotation)
+				grounded = numPoints > 1;
 				ground = i;
 
 			}
@@ -304,6 +321,8 @@ public:
 				grounded = false;
 		}
 
+		//Jump FSA based on current and previous jumping state
+		// 
 		//Start jump with an initial velocity and setting parameters
 		if (grounded && jump && !jumpWasPressed) { 
 			currvelocity_y = JUMP_INSTANT_VELOCITY;
@@ -335,7 +354,7 @@ public:
 			currvelocity_y += G * timeExtra;
 			NewPos += uy * timeExtra * (currvelocity_y + (G * timeExtra));
 		}
-		//Fall by applying gravity
+		//Fall by applying gravity if not on ground (and not pressing jump or the peak was reached)
 		else if(!grounded)
 		{
 			currvelocity_y += G * deltaT;
@@ -351,7 +370,7 @@ public:
 			//Place object back terrain level in order to avoid clipping though and to have consistent terrain levels
 			NewPos.y = ((*collisionBoxes[ground]->mMat) * glm::vec4(collisionBoxes[ground]->pos + collisionBoxes[ground]->halfExtents, 1)).y + 0.001f;
 		}
-		//Stay on ground (actually the same as above but it could be useful to have them distinct
+		//Stay on ground (actually the same as above right now but it could be useful to have them distinct
 		else if (grounded) 
 		{
 			stretchState = STRETCH_LANDING;
@@ -370,6 +389,7 @@ public:
 		//For debug
 		//std::cout << "Pos: " << Pos.x << " " << Pos.y << " " << Pos.z << "\n";
 		// 
+		
 		//---Rotate character---
 		float targetCharYaw;
 		bool shouldRotate = true;
@@ -420,6 +440,8 @@ public:
 		Prj[1][1] *= -1;
 	}
 
+	// When hit, character looses a life and must start flashing (by setting the hit time)
+	// Returns true if character is actually hit (meaning, he is not invincible)
 	bool onHit(float hitTime) {
 		if (hitTime - lastHitTime > INVINCIBILITY_TIME) {
 			health--;
@@ -431,10 +453,12 @@ public:
 			return false;
 	}
 
+	// Sets gameover time
 	void initGameOver(float time){
 		gameOverTime = time;
 	}
 
+	// Performs death animation
 	bool gameOver(float time) {
 		shrink = glm::mix(1.0f, 0.0f, (time - gameOverTime) / GAME_OVER_DURATION);
 		World = glm::translate(glm::mat4(1), Pos) *
@@ -443,6 +467,7 @@ public:
 		return (time - gameOverTime) > GAME_OVER_DURATION;
 	}
 
+	// Resets all parameters to restart play
 	void reset() {
 		Pos = StartingPosition;
 		NewPos = Pos;
@@ -491,6 +516,8 @@ public:
 	}
 };
 
+
+//Class that represents an enemy that moves around and can damage the player
 class Enemy {
 private:
 	// Player starting point, scaling and rotation
@@ -528,6 +555,7 @@ public:
 		currScale = startingScaling;
 	}
 
+	// Moves enemy on a line using the parameters set
 	void moveEnemy(float deltaT) {
 		currPosition = glm::mix(startingPosition, endPosition, (float)(glm::sin(timeElapsed * ((2 * 3.14) * moveSpeed)) + 1)/2.0f);
 		currRot = glm::mix(startingRotation, startingRotation + 360.0f, (float)timeElapsed * moveSpeed);
@@ -538,6 +566,7 @@ public:
 			glm::scale(glm::mat4(1), glm::vec3(currScale));
 	}
 
+	// Check collision with the character bounding sphere
 	bool checkCollision(BoundingSphere bsChar) {
 		return sphereBoxCollision(*bbEnemy, bsChar);
 	}
@@ -549,6 +578,7 @@ public:
 
 };
 
+//Class that represents a scroll that can be taken by the character as an objective
 class Scroll {
 private:
 	// Player starting point, scaling and rotation
@@ -589,6 +619,7 @@ public:
 		currRot = startRot;
 	}
 
+	// Moves scroll up and down and rotates it for a nice visual effect. If taken, it will slowly fade away
 	void updateScroll(float deltaT, float time) {
 		if (currScale != 0) {
 			currPosition = glm::mix(startingPosition, endPosition, (float)(glm::sin(timeElapsed * ((2 * 3.14) * bounceSpeed)) + 1) / 2.0f);
@@ -605,10 +636,12 @@ public:
 		}
 	}
 
+	// Check collision with the character bounding sphere
 	bool checkCollision(BoundingSphere bsChar) {
 		return sphereBoxCollision(*bbScroll, bsChar);
 	}
 
+	// Called when the scroll was taken by the player. When caputred it will slowly fade
 	void getScroll(float time) {
 		if(! captured)
 			timeCaptured = time;

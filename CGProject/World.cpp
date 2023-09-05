@@ -3,7 +3,6 @@
 #include <glm/gtc/quaternion.hpp>
 
 #define TERRAIN_INSTANCES 2
-#define GRASS_INSTANCES 1
 #define BIRCH_INSTANCES 10
 #define TREE_INSTANCES 4
 #define PINE_INSTANCES 15
@@ -14,16 +13,12 @@
 #define SCROLL_INSTANCES 5
 #define FLOAT_INSTANCES 6
 
-#define MAX_GRASS_INSTANCES 500
+#define MAX_GRASS_INSTANCES 600
 
 
 Transform terrainTransform[TERRAIN_INSTANCES] = {
 	{glm::vec3(0, -0.5, -20),			glm::vec3(0),				glm::vec3(2)},
 	{glm::vec3(30, 5, -73),				glm::vec3(0,180.f,0),		glm::vec3(1)},
-};
-
-Transform grassTransform[GRASS_INSTANCES] = {
-	{glm::vec3(1, 0.2f, 1),				glm::vec3(0.0f),			glm::vec3(0.0005f * 0)},
 };
 
 Transform grassBTransform[MAX_GRASS_INSTANCES] = {
@@ -32,11 +27,11 @@ Transform grassBTransform[MAX_GRASS_INSTANCES] = {
 };
 
 Transform birchTransform[BIRCH_INSTANCES] = {
-	{glm::vec3(13.5f, -12.f, 10.5f),	glm::vec3(0, 90.0f, 0),		glm::vec3(4.0f)},
+	{glm::vec3(13.5f, -12.f, 10.5f),	glm::vec3(0, 90.0f, 0),		glm::vec3(4.0f)}, //Start screen
 	{glm::vec3(12.0f, -13.f, 20.5f),	glm::vec3(0, 45.0f, 0),		glm::vec3(5.5f)},
 	{glm::vec3(4.5f, -11.f, 14.5f),		glm::vec3(0, 180.0f, 0),	glm::vec3(2.8f)},
 
-	{glm::vec3(-7.0f, -0.6f, 0.7f),		glm::vec3(0, 90.0f, 0),		glm::vec3(1.7)},
+	{glm::vec3(-7.0f, -0.6f, 0.7f),		glm::vec3(0, 90.0f, 0),		glm::vec3(1.7)}, //Game
 	{glm::vec3(-8.5f, -0.6f, 7.2f),		glm::vec3(0, 56.0f, 0),		glm::vec3(1.9)},
 	{glm::vec3(-12.0f, -0.6f, 11.0f),	glm::vec3(0, 112.0f, 0),	glm::vec3(1.5)},
 	{glm::vec3(-15.0f, -0.6f, 1.5f),	glm::vec3(0, 12.0f, 0),		glm::vec3(2)},
@@ -65,10 +60,10 @@ Transform pineTransform[PINE_INSTANCES] = {
 	{glm::vec3(21.0f, -0.2f, -38.f),	glm::vec3(0, 46.0f, 0),		glm::vec3(1,0.8f,1)},
 	{glm::vec3(20.0f, -0.2f, -29.f),	glm::vec3(0, 56.0f, 0),		glm::vec3(1,1.25f,1)},
 
-	{glm::vec3(40.0f, 4.9f, -62.f),		glm::vec3(0, 198.0f, 0),	glm::vec3(1.8,1.f,1.8)},
-	{glm::vec3(42.0f, 4.9f, -73.f),		glm::vec3(0.0f),			glm::vec3(1.8,0.9f,1.8)},
-	{glm::vec3(24.0f, 4.9f, -76.5f),	glm::vec3(0.0f),			glm::vec3(1.8,1.2f,1.8)},
-	{glm::vec3(15.5f, 4.9f, -64.f),		glm::vec3(0.0f),			glm::vec3(1.8,1.1f,1.8)},
+	{glm::vec3(40.0f, 4.9f, -62.f),		glm::vec3(0, 198.0f, 0),	glm::vec3(1.8,1.2f,1.8)},
+	{glm::vec3(42.0f, 4.9f, -73.f),		glm::vec3(0.0f),			glm::vec3(1.8,1.1f,1.8)},
+	{glm::vec3(24.0f, 4.9f, -76.5f),	glm::vec3(0.0f),			glm::vec3(1.8,1.4f,1.8)},
+	{glm::vec3(15.5f, 4.9f, -64.f),		glm::vec3(0.0f),			glm::vec3(1.8,1.3f,1.8)},
 };
 
 Transform rockTransform[ROCK_INSTANCES] = {
@@ -99,25 +94,25 @@ Transform rockTransform[ROCK_INSTANCES] = {
 	{glm::vec3(26.0f, 6.5f, -27.0f),	glm::vec3(0, 270.0f, 0),	glm::vec3(5.5f, 2.f, 5.5f)},
 	{glm::vec3(23.0f, 8.3f, -36.0f),	glm::vec3(0, 0.0f, 0),		glm::vec3(6.2f, 1.7f, 6.2f)},
 	//2
-	{glm::vec3(15.0f, 0.5, 8.0f),			glm::vec3(0, 0.0f, 0),		glm::vec3(2, 1.5, 4)},
+	{glm::vec3(15.0f, 0.5, 8.0f),		glm::vec3(0, 0.0f, 0),		glm::vec3(2, 1.5, 4)},
 	{glm::vec3(17.0f, 1.2f, 0.0f),		glm::vec3(0, 180.0f, 0),	glm::vec3(3, 3, 5)},
-	{glm::vec3(21.0f, 2.2, 7.0f),		glm::vec3(0, 90.0f, 0),		glm::vec3(4, 4.5, 6)},
+	{glm::vec3(21.0f, 2.2, 6.5f),		glm::vec3(0, 90.0f, 0),		glm::vec3(4, 4.5, 6)},
 	{glm::vec3(25.0f, 3.2, -2.0f),		glm::vec3(0, 0.0f, 0),		glm::vec3(5, 6, 6)},
 	//3
-	{glm::vec3(8.0f, 1.5f, -35.5f),	glm::vec3(0, 45.0f, 0),		glm::vec3(3)},
+	{glm::vec3(8.0f, 1.5f, -35.5f),		glm::vec3(0, 45.0f, 0),		glm::vec3(3)},
 	//4
-	{glm::vec3(-10, 5.f, -35.f),		glm::vec3(0, 30.0f, 0),		glm::vec3(6.5f)},
-	{glm::vec3(-30, 5.f, -20.f),		glm::vec3(0, -45.0f, 0),	glm::vec3(6.5f)},
-	{glm::vec3(-50, 5.f, -45.f),		glm::vec3(0, 180.0f, 0),	glm::vec3(15.0f)},
-	{glm::vec3(-24, 5.f, -50.f),		glm::vec3(0, 0.0f, 0),		glm::vec3(5.0f)},
-	{glm::vec3(-3, 5.f, -44.f),			glm::vec3(0, 45.0f, 0),		glm::vec3(4.0f)},
+	{glm::vec3(-10, 4.8f, -35.f),		glm::vec3(0, 30.0f, 0),		glm::vec3(6.5f)},
+	{glm::vec3(-30, 4.8f, -20.f),		glm::vec3(0, -45.0f, 0),	glm::vec3(6.5f)},
+	{glm::vec3(-50, 4.8f, -45.f),		glm::vec3(0, 180.0f, 0),	glm::vec3(15.0f)},
+	{glm::vec3(-24, 4.8f, -50.f),		glm::vec3(0, 0.0f, 0),		glm::vec3(5.0f)},
+	{glm::vec3(-3, 4.5f, -44.f),		glm::vec3(0, 45.0f, 0),		glm::vec3(4.0f)},
 	
 	{glm::vec3(30, 6.5f, -67.f),		glm::vec3(0, 0.0f, 0),		glm::vec3(3,2.2f,3)},
 	//5
 	{glm::vec3(+30, -13.f, -45.f),		glm::vec3(0, 90.0f, 0),		glm::vec3(5.0f, 2.5f, 5.0)},
 	{glm::vec3(+10, -13.f, -65.f),		glm::vec3(0, 180.0f, 0),	glm::vec3(5.0f, 3, 5.0)},
 	{glm::vec3(+50, -13.f, -65.f),		glm::vec3(0, 0.0f, 0),		glm::vec3(5.0f, 3, 5.0)},
-	{glm::vec3(+30, -13.f, -93.f),		glm::vec3(0, 270.0f, 0),	glm::vec3(5.0f, 3, 5.5)},
+	{glm::vec3(+30, -13.f, -93.f),		glm::vec3(0, 270.0f, 0),	glm::vec3(5.0f, 3, 6.5)},
 };
 int rockType[ROCK_INSTANCES] = {
 	0,
@@ -237,7 +232,7 @@ Transform scrollTransform[SCROLL_INSTANCES] = {
 	{glm::vec3(-24.5f, 1.f, -38.5f),	glm::vec3(0.0f, 0.0f, 45.0f),	glm::vec3(1.f)},
 	{glm::vec3(25.0f, 10.f, -7.0f),		glm::vec3(0.0f, 0.0f, 45.0f),	glm::vec3(1.f)},
 	{glm::vec3(30.0f, 12.f, -67.0f),	glm::vec3(0.0f, 0.0f, 45.0f),	glm::vec3(1.f)},
-	{glm::vec3(-6.0f, 9.f, -11.0f),		glm::vec3(0.0f, 0.0f, 45.0f),	glm::vec3(1.f)},
+	{glm::vec3(-6.0f, 9.f, -10.5f),		glm::vec3(0.0f, 0.0f, 45.0f),	glm::vec3(1.f)},
 };
 
 Transform floatTransform[FLOAT_INSTANCES] = {

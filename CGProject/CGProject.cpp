@@ -17,7 +17,6 @@
 //        vec4  : alignas(16)
 //        mat3  : alignas(16)
 //        mat4  : alignas(16)
-#define GRASS_MODELS 8
 #define ROCK_MODELS 6
 
 // MAIN ! 
@@ -34,8 +33,11 @@ class CGProject : public BaseProject {
 	Controller controller;
 	Enemy spikeEnemy[SPIKE_INSTANCES];
 	Scroll scroll[SCROLL_INSTANCES];
+	float FREQ_START = 0.15f;
+	float FREQ_GAME = 0.025f;
 	float freqDay = 0.025f; //Period (time for a day) = 2*Pi / freq
-		//Values that define three parabolas for day/sunrise/night skybox cycle
+
+	//Values that define three parabolas for day/sunrise/night skybox cycle
 	float
 		dayStart = -0.4f,
 		sunriseStart = -0.2f, sunriseEnd = 0.4f,
@@ -53,7 +55,7 @@ class CGProject : public BaseProject {
 		aCoeffSunrise = aCoefficientParabola(knownPointSunrise, vertexSunrise),
 		aCoeffNight = aCoefficientParabola(knownPointNight, vertexNight);
 
-	float grassSwayRand[GRASS_INSTANCES], treeSwayRand[TREE_INSTANCES], birchSwayRand[BIRCH_INSTANCES], pineSwayRand[PINE_INSTANCES], gplantSwayRand[GPLANT_INSTANCES];
+	float treeSwayRand[TREE_INSTANCES], birchSwayRand[BIRCH_INSTANCES], pineSwayRand[PINE_INSTANCES], gplantSwayRand[GPLANT_INSTANCES];
 
 	int grassInstances = 0;
 	// Current aspect ratio (used by the callback that resized the window
@@ -71,16 +73,15 @@ class CGProject : public BaseProject {
 	// Models, textures and Descriptors (values assigned to the uniforms)
 	// Please note that Model objects depends on the corresponding vertex structure
 	Model<VertexSkyBox> MSkyBox;
-	Model<VertexMesh> MShroom, MGrass[GRASS_MODELS], MGrassB, MBirch, MTree, MPine, MRock[ROCK_MODELS], MWall, MGplant, MFloat, MSpike, MScroll;
+	Model<VertexMesh> MShroom, MGrassB, MBirch, MTree, MPine, MRock[ROCK_MODELS], MWall, MGplant, MFloat, MSpike, MScroll;
 	Model<VertexTerrain> MTerrain;
 	Model<VertexOverlay> MText, MHUD[4];
 
-	DescriptorSet DSGubo, DSTerrain[TERRAIN_INSTANCES], DSShroom, DSGrass[GRASS_INSTANCES], DSGrassB, DSBirch[BIRCH_INSTANCES], DSTree[TREE_INSTANCES], DSPine[PINE_INSTANCES], DSRock[ROCK_INSTANCES], DSWall[WALL_INSTANCES],
+	DescriptorSet DSGubo, DSTerrain[TERRAIN_INSTANCES], DSShroom, DSGrassB, DSBirch[BIRCH_INSTANCES], DSTree[TREE_INSTANCES], DSPine[PINE_INSTANCES], DSRock[ROCK_INSTANCES], DSWall[WALL_INSTANCES],
 		DSScroll[SCROLL_INSTANCES], DSGplant[GPLANT_INSTANCES], DSFloat[FLOAT_INSTANCES], DSSpike[SPIKE_INSTANCES], DSText, DSHUD[4], DSSkyBox;
 
 	Texture TTerrain, TTerrain2, TTerrainNoise, TTerrain_n, TTerrain2_n, TTerrainHeight, TTerrain_MRAO, TTerrain2_MRAO;
 	Texture TShroom, TShroom_MRAO;
-	Texture TGrass, TGrass_MRAO;
 	Texture TGrassB, TGrassB_MRAO;
 	Texture TBirch, TBirch_MRAO;
 	Texture TTree, TTree_MRAO;
@@ -97,7 +98,7 @@ class CGProject : public BaseProject {
 	
 	// C++ storage for uniform variables
 	MeshUniformBlock uboTerrain[TERRAIN_INSTANCES], uboShroom, uboRock[ROCK_INSTANCES], uboWall[WALL_INSTANCES], uboScroll[SCROLL_INSTANCES], uboFloat[FLOAT_INSTANCES];
-	MeshSwayUniformBlock uboGrass[GRASS_INSTANCES], uboBirch[BIRCH_INSTANCES], uboTree[TREE_INSTANCES], uboPine[PINE_INSTANCES], uboGplant[GPLANT_INSTANCES], uboSpike[SPIKE_INSTANCES];
+	MeshSwayUniformBlock uboBirch[BIRCH_INSTANCES], uboTree[TREE_INSTANCES], uboPine[PINE_INSTANCES], uboGplant[GPLANT_INSTANCES], uboSpike[SPIKE_INSTANCES];
 	GrassUniformBlock uboGrassB;
 	SkyBoxUniformBlock uboSkyBox;
 	OverlayUniformBlock uboText, uboHUD[4];
@@ -105,10 +106,8 @@ class CGProject : public BaseProject {
 	GrassInstanceData instanceDataGrassB[MAX_GRASS_INSTANCES];
 
 	BoundingSphere bsShroom;
-	BoundingBox bbShroom, bbTerrain[TERRAIN_INSTANCES], bbBirch[BIRCH_INSTANCES*2], bbTree[TREE_INSTANCES*2], bbPine[PINE_INSTANCES], bbWall[WALL_INSTANCES], bbScroll[SCROLL_INSTANCES],  bbSpike[SPIKE_INSTANCES],
-		bbFloat[FLOAT_INSTANCES];
-	std::vector<BoundingBox *> bbRock; //Need collection for rock to know at runtime how many rock of each type and adjust bb accordingly (some rocks have more than one)
-	std::vector<BoundingBox *> bbCollection;
+	BoundingBox* bbShroom;
+	std::vector<BoundingBox *> bbCollection, bbSpike, bbScroll;
 
 	Pipeline PDebug;
 	DescriptorSetLayout DSLBoundingBox;
@@ -150,10 +149,6 @@ class CGProject : public BaseProject {
 		//Starting time to calculate elapsed seconds when needed
 		startTime = std::chrono::high_resolution_clock::now();
 		//Randomize variable that need randomizing
-		for (int i = 0; i < GRASS_INSTANCES; i++)
-		{
-			grassSwayRand[i] = RandFloat(0, 3.14f);
-		}
 		for (int i = 0; i < TREE_INSTANCES; i++)
 		{
 			treeSwayRand[i] = RandFloat(0, 3.14f);
@@ -171,16 +166,24 @@ class CGProject : public BaseProject {
 			gplantSwayRand[i] = RandFloat(0, 3.14f);
 		}
 		//Algorithmically place objects in the scene
+			//Front start 
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(-0.5f, -0.5f, -2.f), 3, 1, .9f, glm::vec3(1, 0.5, 1));
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(-4.f, -0.5f, -5.f), 4, 3.5, .9f, glm::vec3(1, 0.6, 1));
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(-6.f, -0.5f, -7.f), 1, 3, .9f, glm::vec3(1, 0.7, 1));
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(10.f, -0.2f, .5f), 1.5, 2.5, .9f, glm::vec3(1, 0.4, 1));
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(7.5f, -0.2f, -11.f), 4, 3, .9f, glm::vec3(1, 0.45, 1));
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(1.5f, -0.2f, -15.f), 3.5, 3, .9f, glm::vec3(1,0.55,1));
 			//Left start
 		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(-10.f, -0.5f, 6.5), 3, 2, .9f, glm::vec3(1));
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(-6.f, -0.5f, 6.f), 1.5, 1.5f, .9f, glm::vec3(1, 0.6, 1));
 		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(-14, -0.5f, 10.5), 4, 2.5f, .9f, glm::vec3(1));
 		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(-13.5f, -0.5f, -4.6), 3.5, 2, .9f, glm::vec3(1));
 		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(-20.5f, -0.1f, -9.f), 2.5, 2, .9f, glm::vec3(1));
 			//Pine forest
 		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(-3.f, -0.5f, -22.5), 1.2, 2.2, .9f, glm::vec3(1));
 		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(7.f, -0.5f, -25), 4.5, 4, .9f, glm::vec3(1));
-		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(10.5f, -0.5f, -20.5), 3, 3.5, .9f, glm::vec3(1));
-		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(8.f, -0.5f, -20.5), 1.5, 1, .9f, glm::vec3(1));
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(10.5f, -0.5f, -20.5), 3, 3.5, .9f, glm::vec3(1,0.8,1));
+		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(8.f, -0.5f, -20.5), 2.0, 1, .9f, glm::vec3(1, 0.7, 1));
 		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(14.f, -0.5f, -35.5), 2.5, 1.5, .9f, glm::vec3(1));
 		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(18.f, -0.5f, -26.5), 2, 1, .9f, glm::vec3(1));
 		grassInstances += placeGrassPatch(grassBTransform, grassInstances, MAX_GRASS_INSTANCES, glm::vec3(23.f, -0.5f, -14.5), 1.5, 2, .9f, glm::vec3(1));
@@ -198,204 +201,78 @@ class CGProject : public BaseProject {
 		bsShroom.radius = 0.6f;
 		bsShroom.mMat = &(uboShroom.mMat);
 
-		bbShroom.pos = glm::vec3(0, controller.getCharOriginOffset_y(), 0);
-		bbShroom.halfExtents = glm::vec3(0.27f);
-		bbShroom.canCollide = false;
-		bbShroom.isEnemy = false;
-		bbShroom.mMat = &(uboShroom.mMat);
-		bbShroom.nMat = &(uboShroom.nMat);
-		bbCollection.push_back(&bbShroom);
-
+		bbShroom = createBoundingBox(glm::vec3(0, controller.getCharOriginOffset_y(), 0), glm::vec3(0.27f), false, &(uboShroom.mMat), &(uboShroom.nMat));
+		bbCollection.push_back(bbShroom);
 		for (int i = 0; i < TERRAIN_INSTANCES; i++)
 		{
-			bbTerrain[i].pos = glm::vec3(0,-1.85f,0);
-			bbTerrain[i].halfExtents = glm::vec3(20, 2.0f, 20);
-			bbTerrain[i].canCollide = true;
-			bbTerrain[i].isEnemy = false;
-			bbTerrain[i].mMat = &(uboTerrain[i].mMat);
-			bbTerrain[i].nMat = &(uboTerrain[i].nMat);
-			bbCollection.push_back(&bbTerrain[i]);
+			bbCollection.push_back(createBoundingBox(glm::vec3(0, -1.85f, 0), glm::vec3(20, 2.0f, 20), true, &(uboTerrain[i].mMat), &(uboTerrain[i].nMat)));
 		}
-		
 		for (int i = 0; i < BIRCH_INSTANCES; i++)
 		{
-			bbBirch[i * 2].pos = glm::vec3(0, 1.4, 0); //Trunk
-			bbBirch[i * 2].halfExtents = glm::vec3(0.1f, 1.4, 0.1f);
-			bbBirch[i * 2].canCollide = true;
-			bbBirch[i * 2].isEnemy= false;
-			bbBirch[i * 2].mMat = &(uboBirch[i].mMat);
-			bbBirch[i * 2].nMat = &(uboBirch[i].nMat);
-			bbCollection.push_back(&bbBirch[i * 2]);
-			bbBirch[i * 2 + 1].pos = glm::vec3(0, 3, 0); //Leaves
-			bbBirch[i * 2 + 1].halfExtents = glm::vec3(0.7f, 0.5f, 0.7f);
-			bbBirch[i * 2 + 1].canCollide = true;
-			bbBirch[i * 2 + 1].isEnemy = false;
-			bbBirch[i * 2 + 1].mMat = &(uboBirch[i].mMat);
-			bbBirch[i * 2 + 1].nMat = &(uboBirch[i].nMat);
-			bbCollection.push_back(&bbBirch[i * 2 + 1]);
+			//Trunk
+			bbCollection.push_back(createBoundingBox(glm::vec3(0, 1.4, 0), glm::vec3(0.1f, 1.4, 0.1f), true, &(uboBirch[i].mMat), &(uboBirch[i].nMat)));
+			//Leaves
+			bbCollection.push_back(createBoundingBox(glm::vec3(0, 3, 0), glm::vec3(0.7f, 0.5f, 0.7f), true, &(uboBirch[i].mMat), &(uboBirch[i].nMat)));
 		}
 		for (int i = 0; i < TREE_INSTANCES; i++)
 		{
-			bbTree[i * 2].pos = glm::vec3(0, 1.4, 0); //Trunk
-			bbTree[i * 2].halfExtents = glm::vec3(0.2f, 1.2, 0.2f);
-			bbTree[i * 2].canCollide = true;
-			bbTree[i * 2].isEnemy = false;
-			bbTree[i * 2].mMat = &(uboTree[i].mMat);
-			bbTree[i * 2].nMat = &(uboTree[i].nMat);
-			bbCollection.push_back(&bbTree[i * 2]);
-			bbTree[i * 2 + 1].pos = glm::vec3(-0.2, 4.5, -0.1); //Leaves
-			bbTree[i * 2 + 1].halfExtents = glm::vec3(0.9, 0.8, 0.8f);
-			bbTree[i * 2 + 1].canCollide = true;
-			bbTree[i * 2 + 1].isEnemy = false;
-			bbTree[i * 2 + 1].mMat = &(uboTree[i].mMat);
-			bbTree[i * 2 + 1].nMat = &(uboTree[i].nMat);
-			bbCollection.push_back(&bbTree[i * 2 + 1]);
+			//Trunk
+			bbCollection.push_back(createBoundingBox(glm::vec3(0, 1.4, 0), glm::vec3(0.2f, 1.2, 0.2f), true, &(uboTree[i].mMat), &(uboTree[i].nMat)));
+			//Leaves
+			bbCollection.push_back(createBoundingBox(glm::vec3(-0.2, 4.5, -0.1), glm::vec3(0.9, 0.8, 0.8f), true, &(uboTree[i].mMat), &(uboTree[i].nMat)));
 		}
 		for (int i = 0; i < PINE_INSTANCES; i++)
 		{
-			bbPine[i].pos = glm::vec3(0, 3, 0); //Trunk
-			bbPine[i].halfExtents = glm::vec3(0.4f, 6, 0.4f);
-			bbPine[i].canCollide = true;
-			bbPine[i].isEnemy = false;
-			bbPine[i].mMat = &(uboPine[i].mMat);
-			bbPine[i].nMat = &(uboPine[i].nMat);
-			bbCollection.push_back(&bbPine[i]);
+			//Trunk
+			bbCollection.push_back(createBoundingBox(glm::vec3(0, 3, 0), glm::vec3(0.4f, 6, 0.4f), true, &(uboPine[i].mMat), &(uboPine[i].nMat)));
 		}
 		for (int i = 0; i < ROCK_INSTANCES; i++)
 		{
 			if (rockType[i] == 0){
-				BoundingBox* bb1 = new BoundingBox();
-				bb1->pos = glm::vec3(-0.3, 0, 0); //Big rock
-				bb1->halfExtents = glm::vec3(0.5f, 0.55f, 0.5f);
-				bb1->canCollide = true;
-				bb1->isEnemy = false;
-				bb1->mMat = &(uboRock[i].mMat);
-				bb1->nMat = &(uboRock[i].nMat);
-				bbRock.push_back(bb1);
-				bbCollection.push_back(bb1);
-				BoundingBox* bb2 = new BoundingBox();
-				bbRock.push_back(bb2);
-				bb2->pos = glm::vec3(0.2, -0.25, 0.6); //Small rock
-				bb2->halfExtents = glm::vec3(0.3f, 0.35f, 0.3f);
-				bb2->canCollide = true;
-				bb2->isEnemy = false;
-				bb2->mMat = &(uboRock[i].mMat);
-				bb2->nMat = &(uboRock[i].nMat);
-				bbCollection.push_back(bb2);
+				//Big rock
+				bbCollection.push_back(createBoundingBox(glm::vec3(-0.3, 0, 0), glm::vec3(0.5f, 0.55f, 0.5f), true, &(uboRock[i].mMat), &(uboRock[i].nMat)));
+				//Small rock
+				bbCollection.push_back(createBoundingBox(glm::vec3(0.2, -0.25, 0.6), glm::vec3(0.3f, 0.35f, 0.3f), true, &(uboRock[i].mMat), &(uboRock[i].nMat)));
 			}
 			else if (rockType[i] == 1) {
-				BoundingBox* bb1 = new BoundingBox();
-				bbRock.push_back(bb1);
-				bb1->pos = glm::vec3(0, 0, 0);
-				bb1->halfExtents = glm::vec3(0.6f, 0.52f, 0.6f);
-				bb1->canCollide = true;
-				bb1->isEnemy = false;
-				bb1->mMat = &(uboRock[i].mMat);
-				bb1->nMat = &(uboRock[i].nMat);
-				bbCollection.push_back(bb1);
+				bbCollection.push_back(createBoundingBox(glm::vec3(0), glm::vec3(0.6f, 0.52f, 0.6f), true, &(uboRock[i].mMat), &(uboRock[i].nMat)));
 			}
 			else if (rockType[i] == 2) {
-				BoundingBox* bb1 = new BoundingBox();
-				bbRock.push_back(bb1);
-				bb1->pos = glm::vec3(0, 0, 0);
-				bb1->halfExtents = glm::vec3(0.53f, 0.6f, 0.4f);
-				bb1->canCollide = true;
-				bb1->isEnemy = false;
-				bb1->mMat = &(uboRock[i].mMat);
-				bb1->nMat = &(uboRock[i].nMat);
-				bbCollection.push_back(bb1);
+				bbCollection.push_back(createBoundingBox(glm::vec3(0), glm::vec3(0.53f, 0.6f, 0.4f), true, &(uboRock[i].mMat), &(uboRock[i].nMat)));
 			}
 			else if (rockType[i] == 3) {
 				BoundingBox* bb1 = new BoundingBox();
-				bbRock.push_back(bb1);
-				bb1->pos = glm::vec3(0, 0, 0);
-				bb1->halfExtents = glm::vec3(1.3f, 0.55f, 0.5f);
-				bb1->canCollide = true;
-				bb1->isEnemy = false;
-				bb1->mMat = &(uboRock[i].mMat);
-				bb1->nMat = &(uboRock[i].nMat);
-				bbCollection.push_back(bb1);
+				bbCollection.push_back(createBoundingBox(glm::vec3(0), glm::vec3(1.3f, 0.55f, 0.5f), true, &(uboRock[i].mMat), &(uboRock[i].nMat)));
 			}
 			else if (rockType[i] == 4) {
-				BoundingBox* bb1 = new BoundingBox();
-				bbRock.push_back(bb1);
-				bb1->pos = glm::vec3(0, -0.5, 0); //Lower rock
-				bb1->halfExtents = glm::vec3(1.2f, 0.7, 1.2f);
-				bb1->canCollide = true;
-				bb1->isEnemy = false;
-				bb1->mMat = &(uboRock[i].mMat);
-				bb1->nMat = &(uboRock[i].nMat);
-				bbCollection.push_back(bb1);
-				BoundingBox* bb2 = new BoundingBox();
-				bbRock.push_back(bb2);
-				bb2->pos = glm::vec3(0.1, 0.5, 0); //Upper rock
-				bb2->halfExtents = glm::vec3(0.7, 1, 0.7);
-				bb2->canCollide = true;
-				bb2->isEnemy = false;
-				bb2->mMat = &(uboRock[i].mMat);
-				bb2->nMat = &(uboRock[i].nMat);
-				bbCollection.push_back(bb2);
-				BoundingBox* bb3 = new BoundingBox();
-				bbRock.push_back(bb3);
-				bb3->pos = glm::vec3(0, 0, -0.7); //Upper rock
-				bb3->halfExtents = glm::vec3(1.2, 0.9, 0.6);
-				bb3->canCollide = true;
-				bb3->isEnemy = false;
-				bb3->mMat = &(uboRock[i].mMat);
-				bb3->nMat = &(uboRock[i].nMat);
-				bbCollection.push_back(bb3);
+				//Lower rock
+				bbCollection.push_back(createBoundingBox(glm::vec3(0, -0.5, 0), glm::vec3(1.2f, 0.7, 1.2f), true, &(uboRock[i].mMat), &(uboRock[i].nMat)));
+				//Middle rock
+				bbCollection.push_back(createBoundingBox(glm::vec3(0.1, 0.5, 0), glm::vec3(0.7, 1, 0.7), true, &(uboRock[i].mMat), &(uboRock[i].nMat)));
+				//Upper rock
+				bbCollection.push_back(createBoundingBox(glm::vec3(0, 0, -0.7), glm::vec3(1.2, 0.9, 0.6), true, &(uboRock[i].mMat), &(uboRock[i].nMat)));
 			}
 			else if (rockType[i] == 5) {
-				BoundingBox* bb1 = new BoundingBox();
-				bbRock.push_back(bb1);
-				bb1->pos = glm::vec3(1, 4.f, 0);
-				bb1->halfExtents = glm::vec3(1.f, 3.8f, 4.f);
-				bb1->canCollide = true;
-				bb1->isEnemy = false;
-				bb1->mMat = &(uboRock[i].mMat);
-				bb1->nMat = &(uboRock[i].nMat);
-				bbCollection.push_back(bb1);
+				bbCollection.push_back(createBoundingBox(glm::vec3(1, 4.f, 0), glm::vec3(1.f, 3.8f, 4.f), true, &(uboRock[i].mMat), &(uboRock[i].nMat)));
 			}
 		}
 		for (int i = 0; i < WALL_INSTANCES; i++)
 		{
-			bbWall[i].pos = glm::vec3(0, -0.1f, 0);
-			bbWall[i].halfExtents = glm::vec3(1.1f, 1.f, 0.1f);
-			bbWall[i].canCollide = true;
-			bbWall[i].isEnemy = false;
-			bbWall[i].mMat = &(uboWall[i].mMat);
-			bbWall[i].nMat = &(uboWall[i].nMat);
-			bbCollection.push_back(&bbWall[i]);
+			bbCollection.push_back(createBoundingBox(glm::vec3(0, -0.1f, 0), glm::vec3(1.1f, 1.f, 0.1f), true, &(uboWall[i].mMat), &(uboWall[i].nMat)));
 		}
 		for (int i = 0; i < SCROLL_INSTANCES; i++)
 		{
-			bbScroll[i].pos = glm::vec3(0, 0, 0);
-			bbScroll[i].halfExtents = glm::vec3(0.7f, 0.25f, 0.25f);
-			bbScroll[i].canCollide = false;
-			bbScroll[i].isEnemy = false;
-			bbScroll[i].mMat = &(uboScroll[i].mMat);
-			bbScroll[i].nMat = &(uboScroll[i].nMat);
-			bbCollection.push_back(&bbScroll[i]);
+			bbScroll.push_back(createBoundingBox(glm::vec3(0), glm::vec3(0.7f, 0.25f, 0.25f), false, &(uboScroll[i].mMat), &(uboScroll[i].nMat)));
+			bbCollection.push_back(bbScroll[i]);
 		}
 		for (int i = 0; i < SPIKE_INSTANCES; i++)
 		{
-			bbSpike[i].pos = glm::vec3(0, 0, 0);
-			bbSpike[i].halfExtents = glm::vec3(.3f);
-			bbSpike[i].canCollide = true;
-			bbSpike[i].isEnemy = true;
-			bbSpike[i].mMat = &(uboSpike[i].mMat);
-			bbSpike[i].nMat = &(uboSpike[i].nMat);
-			bbCollection.push_back(&bbSpike[i]);
+			bbSpike.push_back(createBoundingBox(glm::vec3(0), glm::vec3(.3f), true, &(uboSpike[i].mMat), &(uboSpike[i].nMat)));
+			bbCollection.push_back(bbSpike[i]);
 		}
 		for (int i = 0; i < FLOAT_INSTANCES; i++)
 		{
-			bbFloat[i].pos = glm::vec3(0, 6, 0);
-			bbFloat[i].halfExtents = glm::vec3(1,2.4f,1);
-			bbFloat[i].canCollide = true;
-			bbFloat[i].isEnemy = true;
-			bbFloat[i].mMat = &(uboFloat[i].mMat);
-			bbFloat[i].nMat = &(uboFloat[i].nMat);
-			bbCollection.push_back(&bbFloat[i]);
+			bbCollection.push_back(createBoundingBox(glm::vec3(0, 6, 0), glm::vec3(1, 2.4f, 1), true, &(uboFloat[i].mMat), &(uboFloat[i].nMat)));
 		}
 
 		//Create the exact number of ubo needed for the bounding boxes for debug display
@@ -405,20 +282,20 @@ class CGProject : public BaseProject {
 		}
 		
 		//Initialize character controller and enemies
-		controller.init(bbShroom);
+		controller.init(*bbShroom, bsShroom);
 		for (int i = 0; i < SPIKE_INSTANCES; i++) {
-			spikeEnemy[i].init(bbSpike[i], spikeTransform[i].pos, spikeTransform[i].rot.y, spikeTransform[i].scale, spikeDir[i], spikeDistance[i], spikeSpeed[i]);
+			spikeEnemy[i].init(*(bbSpike[i]), spikeTransform[i].pos, spikeTransform[i].rot.y, spikeTransform[i].scale, spikeDir[i], spikeDistance[i], spikeSpeed[i]);
 		}
 		for (int i = 0; i < SCROLL_INSTANCES; i++) {
-			scroll[i].init(bbScroll[i], scrollTransform[i].pos, scrollTransform[i].rot, scrollTransform[i].scale);
+			scroll[i].init(*(bbScroll[i]), scrollTransform[i].pos, scrollTransform[i].rot, scrollTransform[i].scale);
 		}
 
 		// Descriptor Layouts [what will be passed to the shaders]
 		DSLMesh.init(this, {
-					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
-					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},	//Diffuse
-					{2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},	//MRAO
-					{3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT}	//Emission (Use TDummy_b if no emission needed)
+				{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
+				{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},	//Diffuse
+				{2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},	//MRAO
+				{3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT}	//Emission (Use TDummy_b if no emission needed)
 				});
 		DSLMeshNorm.init(this, {
 				{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
@@ -454,10 +331,10 @@ class CGProject : public BaseProject {
 				{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT}
 			});
 		DSLGubo.init(this, {
-					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS}
+				{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS}
 				});
 		DSLBoundingBox.init(this, {
-					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS}
+				{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS}
 				});
 
 		// Vertex descriptors
@@ -544,9 +421,6 @@ class CGProject : public BaseProject {
 		MTerrain.init(this, &VTerrain, "Models/Ground/ground.gltf", GLTF);
 		MSkyBox.init(this, &VSkyBox, "models/SkyBox/SkyBoxCube.gltf", GLTF);
 		MShroom.init(this, &VMesh, "Models/ShroomFriend/shroom.gltf", GLTF);
-		for (int i = 0; i < GRASS_MODELS; i++) {
-			MGrass[i].init(this,   &VMesh, string_format("Models/Grass/grass%d.gltf", i+1), GLTF);
-		}
 		MGrassB.init(this, &VMesh, "Models/GrassBillboard/grassbillboard.gltf", GLTF);
 		MBirch.init(this, &VMesh, "Models/Birch/birch.gltf", GLTF);
 		MPine.init(this, &VMesh, "Models/Pine/Pine.gltf", GLTF);
@@ -597,9 +471,6 @@ class CGProject : public BaseProject {
 
 		TShroom.init(this, "textures/ShroomFriend/mushroom_friend_baseColor.png");
 		TShroom_MRAO.init(this, "textures/ShroomFriend/mushroom_friend_baseColor_MRAO.png");
-
-		TGrass.init(this, "textures/Grass/GrassGrass_MAT_baseColor.png");
-		TGrass_MRAO.init(this, "textures/Grass/GrassGrass_MAT_baseColor_MRAO.png");
 
 		TGrassB.init(this, "textures/GrassBillboard/grassBillboard_baseColor7.png");
 		TGrassB_MRAO.init(this, "textures/GrassBillboard/grassBillboard_MRAO.png");
@@ -693,15 +564,6 @@ class CGProject : public BaseProject {
 				{2, TEXTURE, 0, &TShroom_MRAO},
 				{3, TEXTURE, 0, &TDummy_b}
 			});
-		for (int i = 0; i < GRASS_INSTANCES; i++)
-		{
-			DSGrass[i].init(this, &DSLMesh, {
-						{0, UNIFORM, sizeof(MeshSwayUniformBlock), nullptr},
-						{1, TEXTURE, 0, &TGrass},
-						{2, TEXTURE, 0, &TGrass_MRAO},
-						{3, TEXTURE, 0, &TDummy_b}
-					});
-		}
 		DSGrassB.init(this, &DSLGrassB, {
 						{0, UNIFORM, sizeof(GrassUniformBlock), nullptr},
 						{1, STORAGE, sizeof(GrassInstanceData) * MAX_GRASS_INSTANCES, nullptr},
@@ -832,10 +694,6 @@ class CGProject : public BaseProject {
 		PDebug.cleanup();
 
 		// Cleanup datasets
-		for (int i = 0; i < GRASS_INSTANCES; i++)
-		{
-			DSGrass[i].cleanup();
-		}
 		DSGrassB.cleanup();
 		for (int i = 0; i < BIRCH_INSTANCES; i++)
 		{
@@ -897,8 +755,6 @@ class CGProject : public BaseProject {
 	// methods: .cleanup() recreates them, while .destroy() delete them completely
 	void localCleanup() {
 		// Cleanup textures
-		TGrass.cleanup();
-		TGrass_MRAO.cleanup();
 		TGrassB.cleanup();
 		TGrassB_MRAO.cleanup();
 		TTerrain.cleanup();
@@ -950,9 +806,6 @@ class CGProject : public BaseProject {
 		
 		// Cleanup models
 		MTerrain.cleanup();
-		for (int i = 0; i < GRASS_MODELS; i++) {
-			MGrass[i].cleanup();
-		}
 		MGrassB.cleanup();
 		MShroom.cleanup();
 		MBirch.cleanup();
@@ -1036,14 +889,6 @@ class CGProject : public BaseProject {
 			static_cast<uint32_t>(MGrassB.indices.size()), grassInstances, 0, 0, 0);
 
 		PMeshSway.bind(commandBuffer);
-		for (int i = 0; i < GRASS_INSTANCES; i++){
-			for (int j = 0; j < GRASS_MODELS; j++) {
-				MGrass[j].bind(commandBuffer);
-				DSGrass[i].bind(commandBuffer, PMeshSway, 1, currentImage);
-				vkCmdDrawIndexed(commandBuffer,
-					static_cast<uint32_t>(MGrass[j].indices.size()), 1, 0, 0, 0);
-			}
-		}
 		for (int i = 0; i < BIRCH_INSTANCES; i++) {
 			MBirch.bind(commandBuffer);
 			DSBirch[i].bind(commandBuffer, PMeshSway, 1, currentImage);
@@ -1150,17 +995,16 @@ class CGProject : public BaseProject {
 		glm::mat4 Prj;
 		glm::mat4 View;
 
-		int toShow = gameState != GAME_STATE_START_SCREEN ? 1 : 0;
+		int showGameScene = gameState != GAME_STATE_START_SCREEN ? 1 : 0;
 		if (gameState == GAME_STATE_START_SCREEN) {
-			freqDay = 0.15f;
+			freqDay = FREQ_START;
 
-			float elapsedSecondsLastPress = std::chrono::duration<float, std::chrono::seconds::period>
-				(currTime - lastPressTime).count();
+			float elapsedSecondsLastPress = std::chrono::duration<float, std::chrono::seconds::period>(currTime - lastPressTime).count();
 			if (start && elapsedSecondsLastPress >= minimumPressDelay) {
 				lastPressTime = currTime;
 				gameState = GAME_STATE_PLAY;
 			}
-			glm::vec3 CamPos = glm::vec3(0, 0, 5); //Starting camera position, now we find actual position by rotating first and then translating
+			glm::vec3 CamPos = glm::vec3(0, 0, 5); //Start screen camera position
 			glm::mat4 CamTransform =
 				glm::translate(glm::mat4(1.0f), glm::vec3(0)) *
 				glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(0, 1, 0)) *
@@ -1182,10 +1026,9 @@ class CGProject : public BaseProject {
 			DSShroom.map(currentImage, &uboShroom, sizeof(uboShroom), 0);
 		}
 		else if (gameState == GAME_STATE_PLAY) {
-			freqDay = 0.025f * 5;
+			freqDay = FREQ_GAME;
 			
-			float elapsedSecondsLastPress = std::chrono::duration<float, std::chrono::seconds::period>
-				(currTime - lastPressTime).count();
+			float elapsedSecondsLastPress = std::chrono::duration<float, std::chrono::seconds::period>(currTime - lastPressTime).count();
 			if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS && elapsedSecondsLastPress >= minimumPressDelay) {
 				lastPressTime = currTime;
 				DEBUG = DEBUG == 1? 0 : 1;
@@ -1199,8 +1042,8 @@ class CGProject : public BaseProject {
 			controller.moveCharacterAndCamera(Ar, deltaT, m, r, jump, bbCollection);
 			Prj = controller.getPrj();
 			View = controller.getView();
-
 			World = controller.getWorld();
+			
 			uboShroom.amb = 0.4f; uboShroom.roughOff = 0.1f; uboShroom.aoOff = 0.0f; uboShroom.sColor = glm::vec3(1.0f);
 			uboShroom.mvpMat = Prj * View * World;
 			uboShroom.mMat = World;
@@ -1241,20 +1084,37 @@ class CGProject : public BaseProject {
 			}
 		}
 
-
 		gubo.DlightDir = glm::rotate(glm::mat4(1), elapsed_seconds * freqDay + 3.2f*(3.14f/2.f), glm::vec3(-1,0,-1)) * glm::normalize(glm::vec4(0, 1, 0, 0));
 		gubo.DlightColor = glm::vec3(gubo.DlightDir.y >= 0 ? gubo.DlightDir.y : 0);
 		gubo.AmbLightColor = glm::vec3(0.35f);
 		gubo.eyePos = controller.getCamPos();
 
-		gubo.plantPointPos0 = gplantTransform[0].pos + glm::vec3(-0.2, 1, 0);
-		gubo.plantPointPos1 = gplantTransform[1].pos + glm::vec3(-0.2, 1, 0);
-		gubo.plantPointPos2 = gplantTransform[2].pos + glm::vec3(-0.2, 1, 0);
-		gubo.plantPointColor = (glm::vec3(119, 160, 201) / 255.f) * (float)toShow;
+		float sinTime;
+		float gPlantRatio_xy = 0.5f;
+		float scale = 0.5f;
+		sinTime = glm::sin(elapsed_seconds + gplantSwayRand[0]);
+		gubo.plantPointPos0 = gplantTransform[0].pos + glm::vec3(-0.2 + sinTime * gPlantRatio_xy * scale, 1, sinTime * gPlantRatio_xy * scale);
+		sinTime = glm::sin(elapsed_seconds + gplantSwayRand[1]);
+		gubo.plantPointPos1 = gplantTransform[1].pos + glm::vec3(-0.2 + sinTime * gPlantRatio_xy * scale, 1, sinTime * gPlantRatio_xy * scale);
+		sinTime = glm::sin(elapsed_seconds + gplantSwayRand[2]);
+		gubo.plantPointPos2 = gplantTransform[2].pos + glm::vec3(-0.2 + sinTime * gPlantRatio_xy * scale, 1, sinTime * gPlantRatio_xy * scale);
+		gubo.plantPointColor = (glm::vec3(119, 160, 201) / 255.f) * (float)showGameScene;
 		gubo.plantPointDist = 1.f;
-		gubo.plantPointDecay = 0.6f;
+		gubo.plantPointDecay = 1.f;
 		DSGubo.map(currentImage, &gubo, sizeof(gubo), 0);
-		
+		for (int i = 0; i < GPLANT_INSTANCES; i++)
+		{
+			World = glm::translate(glm::mat4(1), gplantTransform[i].pos) *
+				glm::rotate(glm::mat4(1), glm::radians(gplantTransform[i].rot.y), glm::vec3(0, 1, 0)) *
+				glm::scale(glm::mat4(1), gplantTransform[i].scale * (float)showGameScene);
+			uboGplant[i].amb = 0.2f; uboGplant[i].roughOff = 0.3f; uboGplant[i].aoOff = 0.5f; uboGplant[i].sColor = glm::vec3(1.0f);
+			uboGplant[i].time = elapsed_seconds + gplantSwayRand[i]; uboGplant[i].ratio_xz = gPlantRatio_xy; uboGplant[i].scale = 8; uboGplant[i].offset = 0;
+			uboGplant[i].mvpMat = Prj * View * World;
+			uboGplant[i].mMat = World;
+			uboGplant[i].nMat = glm::inverse(glm::transpose(World));
+			DSGplant[i].map(currentImage, &uboGplant[i], sizeof(uboGplant[i]), 0);
+		}
+
 		uboGrassB.amb = 0.2f;
 		uboGrassB.sColor = glm::vec3(1.0f);
 		uboGrassB.vpMat = Prj * View;;
@@ -1263,29 +1123,17 @@ class CGProject : public BaseProject {
 		{
 			World = glm::translate(glm::mat4(1), grassBTransform[i].pos) *
 					glm::rotate(glm::mat4(1), glm::radians(grassBTransform[i].rot.y), glm::vec3(0, 1, 0)) *
-					glm::scale(glm::mat4(1), grassBTransform[i].scale * (float)toShow);
+					glm::scale(glm::mat4(1), grassBTransform[i].scale * (float)showGameScene);
 			instanceDataGrassB[i].time = elapsed_seconds; instanceDataGrassB[i].ratio_xz = .5f; instanceDataGrassB[i].scale = 3; instanceDataGrassB[i].offset = 0;
 			instanceDataGrassB[i].mMat = World;
 			instanceDataGrassB[i].nMat = glm::inverse(glm::transpose(World));
 		}
 		DSGrassB.map(currentImage, &instanceDataGrassB, sizeof(instanceDataGrassB), 1);
-		for (int i = 0; i < GRASS_INSTANCES; i++)
-		{
-			World = glm::translate(glm::mat4(1), grassTransform[i].pos) *
-					glm::rotate(glm::mat4(1), glm::radians(grassTransform[i].rot.y), glm::vec3(0, 1, 0)) *
-					glm::scale(glm::mat4(1), grassTransform[i].scale * (float)toShow);
-			uboGrass[i].amb = 0.2f; uboGrass[i].roughOff = 0.f; uboGrass[i].aoOff = 0.0f; uboGrass[i].sColor = glm::vec3(1.0f); 
-			uboGrass[i].time = (elapsed_seconds + grassSwayRand[i])*2; uboGrass[i].ratio_xz = 0.5f; uboGrass[i].scale = 50; uboGrass[i].offset = 0;
-			uboGrass[i].mvpMat = Prj * View * World;
-			uboGrass[i].mMat = World;
-			uboGrass[i].nMat = glm::inverse(glm::transpose(World));
-			DSGrass[i].map(currentImage, &uboGrass[i], sizeof(uboGrass[i]), 0);
-		}
 		for (int i = 0; i < BIRCH_INSTANCES; i++)
 		{
 			World = glm::translate(glm::mat4(1), birchTransform[i].pos) *
 					glm::rotate(glm::mat4(1), glm::radians(birchTransform[i].rot.y), glm::vec3(0, 1, 0)) *
-					glm::scale(glm::mat4(1), birchTransform[i].scale * ((i == 0 || i == 1 || i == 2) ? 1 - (float)toShow : (float)toShow));
+					glm::scale(glm::mat4(1), birchTransform[i].scale * ((i == 0 || i == 1 || i == 2) ? 1 - (float)showGameScene : (float)showGameScene));
 			uboBirch[i].amb = 0.2f; uboBirch[i].roughOff = 1.0f; uboBirch[i].aoOff = 0.0f; uboBirch[i].sColor = glm::vec3(1.0f); 
 			uboBirch[i].time = elapsed_seconds + birchSwayRand[i]; uboBirch[i].ratio_xz = 0.7f; uboBirch[i].scale = 6; uboBirch[i].offset = 0.2f;
 			uboBirch[i].mvpMat = Prj * View * World;
@@ -1297,7 +1145,7 @@ class CGProject : public BaseProject {
 		{
 			World = glm::translate(glm::mat4(1), treeTransform[i].pos) *
 					glm::rotate(glm::mat4(1), glm::radians(treeTransform[i].rot.y), glm::vec3(0, 1, 0)) *
-					glm::scale(glm::mat4(1), treeTransform[i].scale * (float)toShow);
+					glm::scale(glm::mat4(1), treeTransform[i].scale * (float)showGameScene);
 			uboTree[i].amb = 0.2f; uboTree[i].roughOff = 0.0f; uboTree[i].aoOff = 0.0f; uboTree[i].sColor = glm::vec3(1.0f);
 			uboTree[i].time = elapsed_seconds + treeSwayRand[i]; uboTree[i].ratio_xz = 0.5f; uboTree[i].scale = 8; uboTree[i].offset = 0.5;
 			uboTree[i].mvpMat = Prj * View * World;
@@ -1309,7 +1157,7 @@ class CGProject : public BaseProject {
 		{
 			World = glm::translate(glm::mat4(1), pineTransform[i].pos) *
 					glm::rotate(glm::mat4(1), glm::radians(pineTransform[i].rot.y), glm::vec3(0, 1, 0)) *
-					glm::scale(glm::mat4(1), pineTransform[i].scale * (float)toShow);
+					glm::scale(glm::mat4(1), pineTransform[i].scale * (float)showGameScene);
 			uboPine[i].amb = 0.2f; uboPine[i].roughOff = 0.0f; uboPine[i].aoOff = 0.0f; uboPine[i].sColor = glm::vec3(1.0f);
 			uboPine[i].time = elapsed_seconds + pineSwayRand[i]; uboPine[i].ratio_xz = 0.7f; uboPine[i].scale = 9; uboPine[i].offset = 0.2f;
 			uboPine[i].mvpMat = Prj * View * World;
@@ -1321,7 +1169,7 @@ class CGProject : public BaseProject {
 		{
 			World = glm::translate(glm::mat4(1), rockTransform[i].pos) *
 					glm::rotate(glm::mat4(1), glm::radians(rockTransform[i].rot.y), glm::vec3(0, 1, 0))*
-					glm::scale(glm::mat4(1), rockTransform[i].scale * ( i == 0? 1-(float)toShow : (float)toShow));
+					glm::scale(glm::mat4(1), rockTransform[i].scale * ( i == 0? 1-(float)showGameScene : (float)showGameScene));
 			uboRock[i].amb = 0.2f; uboRock[i].roughOff = 0.5f; uboRock[i].aoOff = 0.7f; uboRock[i].sColor = glm::vec3(1.0f);
 			uboRock[i].mvpMat = Prj * View * World;
 			uboRock[i].mMat = World;
@@ -1332,7 +1180,7 @@ class CGProject : public BaseProject {
 		{
 			World = glm::translate(glm::mat4(1), wallTransform[i].pos) *
 					glm::rotate(glm::mat4(1), glm::radians(wallTransform[i].rot.y), glm::vec3(0, 1, 0))*
-					glm::scale(glm::mat4(1), wallTransform[i].scale * (float)toShow);
+					glm::scale(glm::mat4(1), wallTransform[i].scale * (float)showGameScene);
 			uboWall[i].amb = 0.2f; uboWall[i].roughOff = 0.1f; uboWall[i].aoOff = 0.5f; uboWall[i].sColor = glm::vec3(1.0f);
 			uboWall[i].mvpMat = Prj * View * World;
 			uboWall[i].mMat = World;
@@ -1350,23 +1198,11 @@ class CGProject : public BaseProject {
 			uboScroll[i].nMat = glm::inverse(glm::transpose(World));
 			DSScroll[i].map(currentImage, &uboScroll[i], sizeof(uboScroll[i]), 0);
 		}
-		for (int i = 0; i < GPLANT_INSTANCES; i++)
-		{
-			World = glm::translate(glm::mat4(1), gplantTransform[i].pos) *
-					glm::rotate(glm::mat4(1), glm::radians(gplantTransform[i].rot.y), glm::vec3(0, 1, 0)) *
-					glm::scale(glm::mat4(1), gplantTransform[i].scale * (float)toShow);
-			uboGplant[i].amb = 0.2f; uboGplant[i].roughOff = 0.3f; uboGplant[i].aoOff = 0.5f; uboGplant[i].sColor = glm::vec3(1.0f);
-			uboGplant[i].time = elapsed_seconds + gplantSwayRand[i]; uboGplant[i].ratio_xz = 0.5f; uboGplant[i].scale = 10; uboGplant[i].offset = 0;
-			uboGplant[i].mvpMat = Prj * View * World;
-			uboGplant[i].mMat = World;
-			uboGplant[i].nMat = glm::inverse(glm::transpose(World));
-			DSGplant[i].map(currentImage, &uboGplant[i], sizeof(uboGplant[i]), 0);
-		}
 		for (int i = 0; i < FLOAT_INSTANCES; i++)
 		{
 			World = glm::translate(glm::mat4(1), floatTransform[i].pos) *
 				glm::rotate(glm::mat4(1), glm::radians(floatTransform[i].rot.y), glm::vec3(0, 1, 0)) *
-				glm::scale(glm::mat4(1), floatTransform[i].scale * (float)toShow);
+				glm::scale(glm::mat4(1), floatTransform[i].scale * (float)showGameScene);
 			uboFloat[i].amb = 0.2f; uboFloat[i].roughOff = 0.3f; uboFloat[i].aoOff = 0.5f; uboFloat[i].sColor = glm::vec3(1.0f);
 			uboFloat[i].mvpMat = Prj * View * World;
 			uboFloat[i].mMat = World;
@@ -1388,7 +1224,7 @@ class CGProject : public BaseProject {
 		{
 			World = glm::translate(glm::mat4(1), terrainTransform[i].pos) *
 					glm::rotate(glm::mat4(1), glm::radians(terrainTransform[i].rot.y), glm::vec3(0, 1, 0)) *
-					glm::scale(glm::mat4(1), terrainTransform[i].scale * (float)toShow);
+					glm::scale(glm::mat4(1), terrainTransform[i].scale * (float)showGameScene);
 			uboTerrain[i].amb = 0.2f; uboTerrain[i].roughOff = 0.0f; uboTerrain[i].aoOff = 0.0f; uboTerrain[i].sColor = glm::vec3(1.0f);
 			uboTerrain[i].mvpMat = Prj * View * World;
 			uboTerrain[i].mMat = World;

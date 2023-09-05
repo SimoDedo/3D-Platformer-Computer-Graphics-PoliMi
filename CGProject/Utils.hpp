@@ -125,8 +125,6 @@ struct BoundingBox {
 	glm::vec3 halfExtents; 
 	//Wheter this bounding box should be considered for collision
 	bool canCollide; 
-	//Wheter this bounding box should be considered for enemy contact
-	bool isEnemy;
 	//Pointer to the world matrix in the ubo: when the ubo is modifide, so is the bounding box
 	glm::mat4* mMat;
 	glm::mat4 *nMat;
@@ -138,12 +136,14 @@ struct BoundingSphere {
 	glm::mat4* mMat;
 };
 
+
 struct Transform {
 	glm::vec3 pos;
 	glm::vec3 rot;
 	glm::vec3 scale;
 };
 
+// Returns a random float between a and b
 float RandFloat(float a, float b)
 {
 	float random = ((float)rand()) / (float)RAND_MAX;
@@ -152,6 +152,7 @@ float RandFloat(float a, float b)
 	return a + r;
 }
 
+// Returns a formatted string as per classic C printf notation
 template<typename ... Args>
 std::string string_format(const std::string& format, Args ... args)
 
@@ -164,6 +165,18 @@ std::string string_format(const std::string& format, Args ... args)
 	return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
 }
 
+//Creates a new bounding box (may consider making BoundingBox its own class)
+BoundingBox* createBoundingBox(glm::vec3 pos, glm::vec3 halfExtents, bool canCollide, glm::mat4* mMat, glm::mat4* nMat) {
+	BoundingBox* bb1 = new BoundingBox();
+	bb1->pos = pos; 
+	bb1->halfExtents = halfExtents;
+	bb1->canCollide = canCollide;
+	bb1->mMat = mMat;
+	bb1->nMat = nMat;
+	return bb1;
+}
+
+// Creates Vertex and Index buffers from a bounding box to draw it
 void CreateBoundingBoxModel(std::vector<VertexBoundingBox>& vDef, std::vector<uint32_t>& vIdx, BoundingBox* bb) {
 	vDef.push_back({ {bb->halfExtents.x, bb->halfExtents.y, bb->halfExtents.z} });		//0
 	vDef.push_back({ {bb->halfExtents.x, bb->halfExtents.y, -bb->halfExtents.z} });		//1
@@ -194,7 +207,7 @@ void CreateBoundingBoxModel(std::vector<VertexBoundingBox>& vDef, std::vector<ui
 	vIdx.push_back(2); vIdx.push_back(4); vIdx.push_back(6);
 }
 
-//Checks if a ray starting from a point in a certain direction that extends for a given distance collides with an (not necesseraly axis aligned) bounding box.
+//Checks if a ray starting from a point in a certain direction that extends for a given distance collides with an oriented bounding box (OBB).
 //We use the slab method for Axis Aligned Bounding Boxes to compute it. 
 //We transform the ray to object space by multiplying the ray with the inverse of the world matrix, so we can then apply AABB based algorithm in object space
 //If we wanted to retrieve the collision point, it would have to be converted back to world space from object space
@@ -234,8 +247,8 @@ bool rayCollision(glm::vec3 rayOrigin, glm::vec3 rayDir, float rayDistance, Boun
 	return tmax >= glm::max(0.0, tmin) && tmin < rayDistance;
 }
 
-// Returns the squared distance between a point p and an AABB b
-glm::vec3 SqDistPointAABB(glm::vec3 p, BoundingBox bb)
+// Returns the closes point of a BoundingBox to p
+glm::vec3 closestPointAABB(glm::vec3 p, BoundingBox bb)
 {
 	glm::vec3 boxMin = glm::vec3(bb.pos.x - bb.halfExtents.x, bb.pos.y - bb.halfExtents.y, bb.pos.z - bb.halfExtents.z);
 	glm::vec3 boxMax = glm::vec3(bb.pos.x + bb.halfExtents.x, bb.pos.y + bb.halfExtents.y, bb.pos.z + bb.halfExtents.z);
@@ -252,6 +265,7 @@ glm::vec3 SqDistPointAABB(glm::vec3 p, BoundingBox bb)
 	return q;
 }
 // Returns true if sphere s intersects AABB b, false otherwise
+// We transform the sphere to the BoundingBox local space and check whether the closes point to the sphere's center is at a distance greater than the sphere's radius.
 bool sphereBoxCollision(BoundingBox bb, BoundingSphere bs)
 {
 	glm::vec3 center = (*bs.mMat) * glm::vec4(bs.pos, 1.0f);
@@ -261,7 +275,7 @@ bool sphereBoxCollision(BoundingBox bb, BoundingSphere bs)
 	spherePoint = glm::inverse(*bb.mMat) * glm::vec4(spherePoint, 1.0f);
 	float scaledRadius = glm::distance(spherePoint, center);
 
-	glm::vec3 closestPoint = SqDistPointAABB(center, bb);
+	glm::vec3 closestPoint = closestPointAABB(center, bb);
 
 	// Compute squared distance between sphere center and AABB
 	float sqDist = glm::pow(glm::distance(center, closestPoint), 2);
@@ -271,9 +285,30 @@ bool sphereBoxCollision(BoundingBox bb, BoundingSphere bs)
 	return sqDist <= scaledRadius * scaledRadius;
 }
 
-//Checks if the two boxes collide.
-//The second box is transformed into the first's objects space and treated as an AABB in that space to simplify matters.
-//Does not work well since boxes are not actually considered in their correct position and orientation
+// Overload that uses a different world matrix than that of the object linked to the bs (used to calculate prediction on the object position before updating it)
+bool sphereBoxCollision(BoundingBox bb, BoundingSphere bs, glm::mat4 mMat)
+{
+	glm::vec3 center = mMat * glm::vec4(bs.pos, 1.0f);
+	glm::vec3 spherePoint = mMat * glm::vec4(bs.pos + glm::vec3(0, 1, 0) * bs.radius, 1.0f);
+	//Move center in object space so bb can be considered an AABB, and recalculate radius in object space
+	center = glm::inverse(*bb.mMat) * glm::vec4(center, 1.0f);
+	spherePoint = glm::inverse(*bb.mMat) * glm::vec4(spherePoint, 1.0f);
+	float scaledRadius = glm::distance(spherePoint, center);
+
+	glm::vec3 closestPoint = closestPointAABB(center, bb);
+	
+	// Compute squared distance between sphere center and AABB
+	float sqDist = glm::pow(glm::distance(center, closestPoint), 2);
+
+	// Sphere and AABB intersect if the (squared) distance between them is
+	// less than the (squared) sphere radius.
+	return sqDist <= scaledRadius * scaledRadius;
+}
+
+//Deprecated
+// Checks if the two boxes collide.
+// The second box is transformed into the first's objects space and treated as an AABB in that space to simplify matters.
+// Does not work well since boxes are not actually considered in their correct position and orientation
 bool boxCollision(BoundingBox obj, BoundingBox other, float extraDist, glm::quat otherRot) {
 	//Realign other with axis (only done with Y as this function is used only for the character which is only rotated on the Y
 	glm::mat4 aligned = (*other.mMat) * glm::mat4(glm::inverse(otherRot));
@@ -300,10 +335,15 @@ bool boxCollision(BoundingBox obj, BoundingBox other, float extraDist, glm::quat
 	return collisionX && collisionY && collisionZ;
 }
 
+// Returns the a coeafficient of a parabola given a known point and its vertex.
+// The a coefficient can then be used with the known point and vertex to define fully a parabola
 float aCoefficientParabola(glm::vec2 knownPoint, glm::vec2 vertex) {
 	return (knownPoint.y - vertex.y) / (glm::pow(knownPoint.x - vertex.x, 2));
 }
 
+// Places grass instances in the world in a square, starting from the topLeft point and extending for xSize horizontally and zSize vertically, placing each instance at "step" distance.
+// Instances are placed in the container starting from "first" up to "lenght". 
+// The number of instances placed is returned.
 int placeGrassPatch(Transform* container, int first, int lenght, glm::vec3 topLeft, float xSize, float zSize, float step, glm::vec3 scaleMultiplier) {
 	int index = first;
 	for (float i = 0; i <= xSize; i = i + step)

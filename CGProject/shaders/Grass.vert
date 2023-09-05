@@ -42,6 +42,7 @@ void main() {
 					swayValue * clamp(1-data.ratio_xz, 0, 1),
 					1);
 
+	//Apply sway after rotation in world matrix, so all grass sways the same direction indepentently
 	mat4 swayTr = mat4(
 		1,0,0,0,
 		0,1,0,0,

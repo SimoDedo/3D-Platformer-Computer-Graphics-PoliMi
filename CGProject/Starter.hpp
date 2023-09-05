@@ -260,7 +260,7 @@ struct Pipeline {
 	VkCompareOp compareOp;
 	VkPolygonMode polyModel;
  	VkCullModeFlagBits CM;
- 	bool transp;
+	bool transp;
 	
 	VertexDescriptor *VD;
   	
@@ -2617,7 +2617,7 @@ void Pipeline::create() {
 	multisampling.rasterizationSamples = BP->msaaSamples;
 	multisampling.minSampleShading = 1.0f; // Optional
 	multisampling.pSampleMask = nullptr; // Optional
-	//TODO(MIO): add to advanced method
+	//Modified for alpha to work properly
 	multisampling.alphaToCoverageEnable = VK_TRUE;
 	multisampling.alphaToOneEnable = VK_FALSE; // Optional
 	

@@ -23,6 +23,7 @@ layout(set = 1, binding = 0) uniform UniformBufferObject {
 	mat4 mMat;
 	mat4 nMat;
 } ubo;
+
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec2 norm;
 layout(location = 2) in vec2 inUV;
