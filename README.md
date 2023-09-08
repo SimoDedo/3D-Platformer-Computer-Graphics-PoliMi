@@ -60,8 +60,7 @@ https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/719464
 https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/4489f2d4-0733-494c-988b-9b979fb8d15b
 
 ![CGProject_x0ubQgyYbd](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/09e6ae59-5426-4d0a-afd2-4e09d190e40a)
-![CGProject_tgBSorJHIs](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/6707505e-ecf4-4794-8271-05f3346bb606)
-![CGProject_7DeJOA8tnd](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/d0bffbd6-f7f3-4c67-85f2-846d90e06a31)
-![CGProject_aFj5zgYrHy](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/0398c66a-19c2-45e6-adfb-2c5f00c92445)
 ![CGProject_hJMRBW44Q0](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/8bec0a9e-4c98-4b7e-9937-e489a2454c95)
-
+![CGProject_aFj5zgYrHy](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/0398c66a-19c2-45e6-adfb-2c5f00c92445)
+![CGProject_7DeJOA8tnd](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/d0bffbd6-f7f3-4c67-85f2-846d90e06a31)
+![CGProject_tgBSorJHIs](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/6707505e-ecf4-4794-8271-05f3346bb606)
