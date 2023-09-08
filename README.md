@@ -1,6 +1,10 @@
 # 3D-Platformer-Computer-Graphics-PoliMi
 A 3D platformer featuring a mushroom on quest to recover five scrolls. Made as the final project for the Computer Graphics course at PoliMi.
 
+All assets used can be found online for free. 
+
+![CGProject_WI4nExO02k](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/2bc48cbe-f2dc-4174-8813-4e2723fee340)
+
 ## Overview
 The project was developed in C++ using the Vulkan API to write low level operations that handle the creation, transformation and deletion of meshes in a 3D environment.
 
@@ -33,8 +37,6 @@ Beyond what is strictly needed for a Vulkan application (matrix operation, pipel
 ### Start screen
 
 https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/9a1e4a28-001d-4928-b48d-84c4fc678688
-
-![CGProject_WI4nExO02k](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/2bc48cbe-f2dc-4174-8813-4e2723fee340)
 
 ### Grass
 
