@@ -40,7 +40,7 @@ https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/719464
 
 ### Grass
 
-https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/de71f551-bc1f-4814-9fdf-45bf45fe4b26
+https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/fd65dfeb-bbde-4c30-8f26-6202ef4680de
 
 ![CGProject_tgBSorJHIs](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/fecba27f-f933-4dd7-9c46-8f8ea74795e6)
 ![CGProject_3cafoo6ZSj](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/194ab551-d953-42ab-aee2-713abb39d5b2)
