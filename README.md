@@ -3,7 +3,7 @@ A 3D platformer featuring a mushroom on quest to recover five scrolls. Made as t
 
 All assets used can be found online for free. 
 
-![CGProject_WI4nExO02k](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/2bc48cbe-f2dc-4174-8813-4e2723fee340)
+![CGProject_WI4nExO02k](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/ccaa0147-81e1-4c84-b84f-f70b215df896)
 
 ## Overview
 The project was developed in C++ using the Vulkan API to write low level operations that handle the creation, transformation and deletion of meshes in a 3D environment.
@@ -36,31 +36,33 @@ Beyond what is strictly needed for a Vulkan application (matrix operation, pipel
 ## Media
 ### Start screen
 
-https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/9a1e4a28-001d-4928-b48d-84c4fc678688
+https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/93f8944e-7564-42ac-b59f-be0353c516e4
 
 ### Grass
 
-https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/fd65dfeb-bbde-4c30-8f26-6202ef4680de
+https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/915bbf52-b4c6-4302-9190-7288a2fdaccd
 
-![CGProject_tgBSorJHIs](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/fecba27f-f933-4dd7-9c46-8f8ea74795e6)
-![CGProject_3cafoo6ZSj](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/194ab551-d953-42ab-aee2-713abb39d5b2)
+![CGProject_3cafoo6ZSj](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/5488cf82-c752-44fc-a9ea-fc2feb68e88e)
+![CGProject_tgBSorJHIs](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/96a845ec-f68c-4fc9-9fbf-e6a165b84056)
+
 
 ### Sway
 
-https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/bc761453-786e-4f1f-be33-9921e1e14d14
+https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/c62da543-a29a-4e71-900d-13f903825671
 
 ### Gameplay
 
-https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/47f6bac5-3aa3-4967-8eb8-0f7fa65cfb7b
+https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/3856a23d-6d1c-4e6d-aa88-e5e8f7270ce0
 
-https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/27c2b329-dc7d-4ab5-b9d4-bd3e7d5e9bcf
+https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/5aee323a-4760-42e2-8301-b7f128e2513b
 
 ### Light
 
-https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/4489f2d4-0733-494c-988b-9b979fb8d15b
+https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/fad0e49e-974a-4144-a30f-bc2c7c75d7ee
 
-![CGProject_x0ubQgyYbd](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/09e6ae59-5426-4d0a-afd2-4e09d190e40a)
-![CGProject_hJMRBW44Q0](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/8bec0a9e-4c98-4b7e-9937-e489a2454c95)
-![CGProject_aFj5zgYrHy](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/0398c66a-19c2-45e6-adfb-2c5f00c92445)
-![CGProject_7DeJOA8tnd](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/d0bffbd6-f7f3-4c67-85f2-846d90e06a31)
-![CGProject_tgBSorJHIs](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/6707505e-ecf4-4794-8271-05f3346bb606)
+![CGProject_x0ubQgyYbd](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/e14f221b-669d-463e-b56f-94355b77bef1)
+![CGProject_hJMRBW44Q0](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/37cf2102-072d-4494-afab-0133dd46e43e)
+![CGProject_aFj5zgYrHy](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/59b532da-a3b2-44c7-b3f9-c22c7762d083)
+![CGProject_7DeJOA8tnd](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/e27eb796-4608-4fec-b6cb-9ae9a0c77e86)
+
+
