@@ -3,7 +3,7 @@ A 3D platformer featuring a mushroom on quest to recover five scrolls. Made as t
 
 All assets used can be found online for free. 
 
-![CGProject_WI4nExO02k](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/ccaa0147-81e1-4c84-b84f-f70b215df896)
+![immagine](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/1da30c82-0153-4603-84e8-e209440a69f5)
 
 ## Overview
 The project was developed in C++ using the Vulkan API to write low level operations that handle the creation, transformation and deletion of meshes in a 3D environment.
