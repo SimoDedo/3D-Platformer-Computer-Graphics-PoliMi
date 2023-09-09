@@ -25,7 +25,7 @@ Beyond what is strictly needed for a Vulkan application (matrix operation, pipel
   + Damage detection though collisions, and health bar
 + **Rendering**
   + Use of storage buffer to implement instanced rendering, paired with a vertex shader
-  + Alghoritmic creation of meshes for the bounding boxes
+  + Alghoritmic creation of meshes for the bounding boxes that may be displayed as wireframes
 + **Shaders**
   + MRAO maps usage
   + Normal maps used via the TBN matrix
@@ -38,6 +38,12 @@ Beyond what is strictly needed for a Vulkan application (matrix operation, pipel
 
 https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/93f8944e-7564-42ac-b59f-be0353c516e4
 
+### Gameplay
+
+https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/3856a23d-6d1c-4e6d-aa88-e5e8f7270ce0
+
+https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/5aee323a-4760-42e2-8301-b7f128e2513b
+
 ### Grass
 
 https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/915bbf52-b4c6-4302-9190-7288a2fdaccd
@@ -48,13 +54,7 @@ https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/719464
 
 ### Sway
 
-https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/c62da543-a29a-4e71-900d-13f903825671
-
-### Gameplay
-
-https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/3856a23d-6d1c-4e6d-aa88-e5e8f7270ce0
-
-https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/5aee323a-4760-42e2-8301-b7f128e2513b
+https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/ba9dcc08-783e-43c3-9e0b-d0425853ad1a
 
 ### Light
 
@@ -64,5 +64,11 @@ https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/719464
 ![CGProject_hJMRBW44Q0](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/37cf2102-072d-4494-afab-0133dd46e43e)
 ![CGProject_aFj5zgYrHy](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/59b532da-a3b2-44c7-b3f9-c22c7762d083)
 ![CGProject_7DeJOA8tnd](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/e27eb796-4608-4fec-b6cb-9ae9a0c77e86)
+
+### Debug
+
+![immagine](https://github.com/SimoDedo/3D-Platformer-Computer-Graphics-PoliMi/assets/71946484/7d4550f6-806f-4c1f-9591-5f59b6ecd8d2)
+
+
 
 
